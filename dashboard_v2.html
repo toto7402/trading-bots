@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #080808;
+  --s1: #0f0f0f;
+  --s2: #161616;
+  --s3: #1e1e1e;
+  --b1: #2a2a2a;
+  --b2: #383838;
+  --t1: #f0f0f0;
+  --t2: #999999;
+  --t3: #555555;
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #a78bfa;
+  --teal: #14b8a6;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--t1); font-family:'Syne',sans-serif; font-size:13px; min-height:100vh; }
+.mono { font-family:'JetBrains Mono',monospace; }
+
+/* Header */
+header {
+  position:sticky; top:0; z-index:100;
+  background:var(--bg); border-bottom:1px solid var(--b1);
+  padding:12px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.hdr-left { display:flex; align-items:center; gap:20px; }
+.logo { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:var(--t3); font-family:'JetBrains Mono',monospace; }
+.status { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--t3); font-family:'JetBrains Mono',monospace; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+.dot.off { background:var(--red); animation:none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.ts { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--t3); }
+.btn { background:none; border:1px solid var(--b2); color:var(--t3); padding:5px 14px; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; transition:all .15s; }
+.btn:hover { border-color:var(--t2); color:var(--t2); }
+
+/* Tabs */
+.tabs { display:flex; border-bottom:1px solid var(--b1); padding:0 24px; gap:2px; }
+.tab { padding:10px 18px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--t3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; font-family:'JetBrains Mono',monospace; }
+.tab.active { color:var(--t1); border-bottom-color:var(--t1); }
+.tab:hover { color:var(--t2); }
+.panel { display:none; padding:20px 24px; }
+.panel.active { display:block; }
+
+/* KPI grid */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
+.kpi { background:var(--s1); border:1px solid var(--b1); border-radius:4px; padding:14px 16px; }
+.kpi-l { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--t3); margin-bottom:8px; font-family:'JetBrains Mono',monospace; }
+.kpi-v { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:500; }
+.kpi-s { font-size:11px; color:var(--t3); margin-top:3px; font-family:'JetBrains Mono',monospace; }
+.up { color:var(--green); }
+.dn { color:var(--red); }
+.warn { color:var(--amber); }
+.neu { color:var(--t1); }
+
+/* Cards */
+.card { background:var(--s1); border:1px solid var(--b1); border-radius:4px; overflow:hidden; }
+.card-hdr { padding:10px 16px; border-bottom:1px solid var(--b1); display:flex; justify-content:space-between; align-items:center; }
+.card-title { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--t3); font-family:'JetBrains Mono',monospace; }
+.card-body { padding:16px; }
+
+/* Grid layouts */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+.g14 { display:grid; grid-template-columns:1fr 3fr; gap:14px; margin-bottom:14px; }
+@media(max-width:900px) { .g2,.g3,.g14 { grid-template-columns:1fr; } }
+
+/* Table */
+table { width:100%; border-collapse:collapse; }
+th { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--t3); padding:8px 10px; text-align:right; border-bottom:1px solid var(--b1); font-family:'JetBrains Mono',monospace; font-weight:400; }
+th:first-child { text-align:left; }
+td { padding:8px 10px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; border-bottom:1px solid var(--s3); }
+td:first-child { text-align:left; font-family:'Syne',sans-serif; font-size:12px; font-weight:500; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--s2); }
+
+/* Strategy pills */
+.strat-pill { display:inline-block; padding:2px 8px; border-radius:2px; font-size:9px; letter-spacing:1px; font-family:'JetBrains Mono',monospace; }
+
+/* Badges */
+.badge { display:inline-block; padding:1px 6px; border-radius:2px; font-size:9px; letter-spacing:1px; font-family:'JetBrains Mono',monospace; }
+.badge-long  { background:rgba(34,197,94,.12); color:var(--green); }
+.badge-short { background:rgba(239,68,68,.12); color:var(--red); }
+
+/* Charts */
+.chart-wrap { position:relative; }
+
+/* Greeks */
+.greek-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.greek-item { background:var(--s2); border-radius:3px; padding:12px; text-align:center; }
+.greek-sym { font-size:22px; font-weight:500; color:var(--purple); margin-bottom:4px; }
+.greek-val { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:500; }
+.greek-lbl { font-size:9px; letter-spacing:2px; color:var(--t3); margin-top:3px; }
+
+/* Stress tests */
+.stress-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid var(--s3); }
+.stress-row:last-child { border-bottom:none; }
+.stress-bar-wrap { flex:1; margin:0 12px; height:4px; background:var(--s3); border-radius:2px; overflow:hidden; }
+.stress-bar { height:100%; border-radius:2px; }
+
+/* Corr matrix */
+.corr-table td { font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 8px; }
+.corr-table th { font-size:9px; }
+
+/* Alert */
+.alert-list { display:flex; flex-direction:column; gap:6px; }
+.al { padding:8px 12px; border-radius:3px; border-left:3px solid; font-size:11px; }
+.al-d { background:rgba(239,68,68,.06); border-color:var(--red); }
+.al-w { background:rgba(245,158,11,.06); border-color:var(--amber); }
+.al-i { background:rgba(59,130,246,.06); border-color:var(--blue); }
+.al-t { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--t3); margin-right:8px; }
+.no-al { color:var(--t3); font-size:11px; text-align:center; padding:20px; }
+
+/* Strategy perf cards */
+.strat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin-bottom:14px; }
+.strat-card { background:var(--s1); border:1px solid var(--b1); border-radius:4px; padding:14px; }
+.strat-name { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--t2); margin-bottom:10px; font-family:'JetBrains Mono',monospace; }
+.strat-pnl { font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:500; margin-bottom:6px; }
+.strat-meta { display:flex; gap:14px; }
+.strat-meta-item { font-size:10px; font-family:'JetBrains Mono',monospace; }
+.strat-meta-label { color:var(--t3); }
+.strat-accent { height:2px; border-radius:1px; margin-bottom:12px; }
+
+/* Divider */
+.sep { height:1px; background:var(--b1); margin:14px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-left">
+    <span class="logo">DUP091760 / Risk Dashboard</span>
+    <div class="status"><div class="dot" id="dot"></div><span id="conn-txt">connecting</span></div>
+  </div>
+  <div class="hdr-left">
+    <span class="ts" id="ts">—</span>
+    <button class="btn" onclick="load()">↻ REFRESH</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">Overview</div>
+  <div class="tab" onclick="showTab('strategies')">Strategies</div>
+  <div class="tab" onclick="showTab('positions')">Positions</div>
+  <div class="tab" onclick="showTab('risk')">Risk</div>
+  <div class="tab" onclick="showTab('greeks')">Greeks</div>
+</div>
+
+<!-- ── TAB: OVERVIEW ── -->
+<div class="panel active" id="tab-overview">
+  <div class="kpi-grid" id="kpi-overview"></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">NAV History</span></div>
+      <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="nav-chart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Allocation par stratégie</span></div>
+      <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="alloc-chart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Alertes</span><span class="mono" style="font-size:11px;color:var(--t3)" id="alert-cnt">0</span></div>
+    <div class="card-body"><div class="alert-list" id="alert-list"><div class="no-al">Aucune alerte</div></div></div>
+  </div>
+</div>
+
+<!-- ── TAB: STRATEGIES ── -->
+<div class="panel" id="tab-strategies">
+  <div class="strat-cards" id="strat-cards"></div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">P&L cumulé par stratégie</span></div>
+    <div class="card-body"><div class="chart-wrap" style="height:260px"><canvas id="strat-pnl-chart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- ── TAB: POSITIONS ── -->
+<div class="panel" id="tab-positions">
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap" id="strat-filters"></div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Positions</span>
+      <span class="mono" style="font-size:11px;color:var(--t3)" id="pos-cnt">0</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th><th>Stratégie</th><th>Dir</th><th>Shares</th>
+            <th>Avg Cost</th><th>Mkt Price</th><th>Mkt Value</th>
+            <th>P&L $</th><th>Return</th><th>Weight</th>
+          </tr>
+        </thead>
+        <tbody id="pos-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAB: RISK ── -->
+<div class="panel" id="tab-risk">
+  <div class="kpi-grid" id="kpi-risk"></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Stress Tests</span></div>
+      <div class="card-body" id="stress-body"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Levier & Exposition</span></div>
+      <div class="card-body"><div class="chart-wrap" style="height:200px"><canvas id="exp-chart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Corrélations inter-stratégies</span></div>
+    <div class="card-body" id="corr-body"><div class="no-al">Données insuffisantes (min 10 observations)</div></div>
+  </div>
+</div>
+
+<!-- ── TAB: GREEKS ── -->
+<div class="panel" id="tab-greeks">
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Greeks agrégés portefeuille</span></div>
+      <div class="card-body">
+        <div class="greek-grid" id="greek-grid"></div>
+        <div class="sep"></div>
+        <p style="font-size:11px;color:var(--t3);line-height:1.7">
+          Delta : sensibilité au prix du sous-jacent (+1 = +$1 pour +$1 du sous-jacent)<br>
+          Gamma : convexité du delta (accélération)<br>
+          Theta : décroissance temporelle ($ perdus par jour si marché flat)<br>
+          Vega : sensibilité à la volatilité implicite (+$X pour +1% IV)
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Greeks par stratégie</span></div>
+      <div class="card-body" id="greeks-by-strat">
+        <div class="no-al">Positions options requises pour les Greeks</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">P&L options (scénario ±5% sous-jacent)</span></div>
+    <div class="card-body"><div class="chart-wrap" style="height:220px"><canvas id="pnl-scenario-chart"></canvas></div></div>
+  </div>
+</div>
+
+<script>
+let charts = {};
+let activeStrat = 'all';
+let lastData = null;
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['overview','strategies','positions','risk','greeks'][i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+function fmt(n, d=2) {
+  if(n==null||isNaN(n)) return '—';
+  return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+}
+function fmtUSD(n) {
+  if(n==null||isNaN(n)) return '—';
+  return (n>=0?'+':'') + '$' + fmt(Math.abs(n));
+}
+function cc(n) { return n>0?'up':n<0?'dn':'neu'; }
+
+function load() {
+  fetch('/api/data').then(r=>r.json()).then(d => {
+    lastData = d;
+    const m = d.metrics || {};
+    const r = d.risk || {};
+    const g = d.greeks || {};
+    const sp = d.strategy_perf || {};
+
+    document.getElementById('dot').className = 'dot' + (d.connected?'':' off');
+    document.getElementById('conn-txt').textContent = d.connected ? 'live' : 'offline';
+    document.getElementById('ts').textContent = d.last_update || '—';
+
+    renderOverview(m, d.nav_history||[], sp, d.alerts||[]);
+    renderStrategies(sp);
+    renderPositions(d.positions||[], sp);
+    renderRisk(m, r);
+    renderGreeks(g);
+  }).catch(e => console.error(e));
+}
+
+function renderOverview(m, hist, sp, alerts) {
+  const kpis = [
+    {l:'NAV', v:'$'+fmt(m.nav), s:null, c:'neu'},
+    {l:'P&L non réalisé', v:fmtUSD(m.upnl), s:(m.upnl_pct>=0?'+':'')+fmt(m.upnl_pct)+'%', c:cc(m.upnl)},
+    {l:'Cash', v:'$'+fmt(m.cash), s:null, c:'neu'},
+    {l:'Levier', v:fmt(m.leverage,2)+'x', s:'max 2.0x', c:m.leverage>1.8?'warn':m.leverage>1.4?'up':'neu'},
+    {l:'Drawdown', v:fmt(m.drawdown,2)+'%', s:null, c:m.drawdown<-5?'dn':m.drawdown<-2?'warn':'up'},
+    {l:'Sharpe', v:fmt(m.sharpe,3), s:null, c:m.sharpe>1?'up':m.sharpe>0?'neu':'dn'},
+    {l:'Positions', v:m.n_pos||0, s:(m.n_long||0)+'L / '+(m.n_short||0)+'S', c:'neu'},
+    {l:'Max Drawdown', v:fmt(m.max_dd,2)+'%', s:null, c:m.max_dd<-10?'dn':m.max_dd<-5?'warn':'up'},
+  ];
+  document.getElementById('kpi-overview').innerHTML = kpis.map(k=>`
+    <div class="kpi">
+      <div class="kpi-l">${k.l}</div>
+      <div class="kpi-v ${k.c}">${k.v}</div>
+      ${k.s ? `<div class="kpi-s">${k.s}</div>` : ''}
+    </div>`).join('');
+
+  const vals = hist.map(x=>x.v);
+  const labels = hist.map(x=>x.t);
+  const isUp = vals.length>1 && vals[vals.length-1] >= vals[0];
+  const col = isUp ? '#22c55e' : '#ef4444';
+  if(!charts.nav) {
+    const ctx = document.getElementById('nav-chart').getContext('2d');
+    charts.nav = new Chart(ctx, {
+      type:'line',
+      data:{labels,datasets:[{data:vals,borderColor:col,backgroundColor:col+'18',borderWidth:1.5,pointRadius:0,fill:true,tension:.3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},maxTicksLimit:6}},
+                y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}}
+    });
+  } else {
+    charts.nav.data.labels = labels;
+    charts.nav.data.datasets[0].data = vals;
+    charts.nav.data.datasets[0].borderColor = col;
+    charts.nav.data.datasets[0].backgroundColor = col+'18';
+    charts.nav.update();
+  }
+
+  const strats = Object.entries(sp).filter(([,v])=>v.exposure>0);
+  const allocLabels = strats.map(([k])=>k);
+  const allocData = strats.map(([,v])=>v.exposure);
+  const allocColors = strats.map(([,v])=>v.color);
+  if(!charts.alloc) {
+    const ctx2 = document.getElementById('alloc-chart').getContext('2d');
+    charts.alloc = new Chart(ctx2, {
+      type:'doughnut',
+      data:{labels:allocLabels,datasets:[{data:allocData,backgroundColor:allocColors,borderWidth:0,borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: $${(c.raw/1000).toFixed(0)}k`}}}}
+    });
+  } else {
+    charts.alloc.data.labels = allocLabels;
+    charts.alloc.data.datasets[0].data = allocData;
+    charts.alloc.data.datasets[0].backgroundColor = allocColors;
+    charts.alloc.update();
+  }
+
+  document.getElementById('alert-cnt').textContent = alerts.length;
+  document.getElementById('alert-list').innerHTML = alerts.length === 0
+    ? '<div class="no-al">Aucune alerte</div>'
+    : alerts.map(a=>`<div class="al al-${a.type[0]}"><span class="al-t">${a.time}</span>${a.msg}</div>`).join('');
+}
+
+function renderStrategies(sp) {
+  document.getElementById('strat-cards').innerHTML = Object.entries(sp).map(([name, s]) => `
+    <div class="strat-card">
+      <div class="strat-accent" style="background:${s.color}"></div>
+      <div class="strat-name">${name}</div>
+      <div class="strat-pnl ${cc(s.pnl)}">${fmtUSD(s.pnl)}</div>
+      <div class="strat-meta">
+        <div class="strat-meta-item"><span class="strat-meta-label">PNL% </span>${(s.pnl_pct>=0?'+':'')+fmt(s.pnl_pct,3)}%</div>
+        <div class="strat-meta-item"><span class="strat-meta-label">Sharpe </span>${fmt(s.sharpe,2)}</div>
+        <div class="strat-meta-item"><span class="strat-meta-label">Pos </span>${s.n_pos}</div>
+      </div>
+    </div>`).join('');
+
+  const labels = Array.from({length:50},(_,i)=>i+1);
+  const datasets = Object.entries(sp).filter(([,s])=>s.history.length>0).map(([name,s])=>({
+    label:name, data:s.history.slice(-50), borderColor:s.color,
+    backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:.3
+  }));
+  if(!charts.stratPnl) {
+    const ctx = document.getElementById('strat-pnl-chart').getContext('2d');
+    charts.stratPnl = new Chart(ctx,{
+      type:'line', data:{labels,datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{x:{display:false},
+                y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},callback:v=>fmtUSD(v)}}}}
+    });
+  } else {
+    charts.stratPnl.data.datasets = datasets;
+    charts.stratPnl.update();
+  }
+}
+
+function renderPositions(positions, sp) {
+  const stratNames = ['all', ...Object.keys(sp)];
+  document.getElementById('strat-filters').innerHTML = stratNames.map(s=>`
+    <button class="btn" style="${activeStrat===s?'border-color:#f0f0f0;color:#f0f0f0':''}"
+      onclick="activeStrat='${s}';renderPositions(lastData.positions||[],lastData.strategy_perf||{})">${s==='all'?'ALL':s}</button>
+  `).join('');
+
+  const filtered = activeStrat === 'all' ? positions : positions.filter(p=>p.strategy===activeStrat);
+  document.getElementById('pos-cnt').textContent = filtered.length + ' position' + (filtered.length>1?'s':'');
+  const color = (v) => v>0?'#22c55e':v<0?'#ef4444':'#f0f0f0';
+  document.getElementById('pos-table').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="10" style="text-align:center;color:#555;padding:20px">Aucune position</td></tr>'
+    : filtered.map(p => {
+        const stratColor = (sp[p.strategy]||{}).color || '#888';
+        return `<tr>
+          <td><strong>${p.ticker}</strong></td>
+          <td><span class="strat-pill" style="background:${stratColor}22;color:${stratColor}">${p.strategy}</span></td>
+          <td><span class="badge badge-${p.direction.toLowerCase()}">${p.direction}</span></td>
+          <td>${p.shares}</td>
+          <td>$${fmt(p.avg_cost,3)}</td>
+          <td>$${fmt(p.mkt_price,3)}</td>
+          <td>$${fmt(Math.abs(p.mkt_value))}</td>
+          <td style="color:${color(p.upnl)}">${fmtUSD(p.upnl)}</td>
+          <td style="color:${color(p.return_pct)}">${(p.return_pct>=0?'+':'')+fmt(p.return_pct)}%</td>
+          <td>${fmt(p.weight)}%</td>
+        </tr>`;
+      }).join('');
+}
+
+function renderRisk(m, r) {
+  const kpis = [
+    {l:'VaR 95% (hist)', v:'-$'+fmt(Math.abs(r.var_95)), s:fmt(r.var_95_pct,3)+'% NAV', c:'dn'},
+    {l:'VaR 99% (hist)', v:'-$'+fmt(Math.abs(r.var_99)), s:null, c:'dn'},
+    {l:'CVaR 95% (ES)', v:'-$'+fmt(Math.abs(r.cvar_95)), s:'Expected Shortfall', c:'dn'},
+    {l:'Levier', v:fmt(r.leverage,3)+'x', s:'max '+r.max_leverage+'x', c:r.leverage>1.8?'warn':'neu'},
+  ];
+  document.getElementById('kpi-risk').innerHTML = kpis.map(k=>`
+    <div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v ${k.c}">${k.v}</div>${k.s?`<div class="kpi-s">${k.s}</div>`:''}</div>`).join('');
+
+  const stress = r.stress || {};
+  const maxAbs = Math.max(...Object.values(stress).map(Math.abs), 1);
+  document.getElementById('stress-body').innerHTML = Object.entries(stress).map(([scenario, pnl])=>`
+    <div class="stress-row">
+      <span class="mono" style="font-size:11px;color:var(--t3);width:80px">${scenario}</span>
+      <div class="stress-bar-wrap">
+        <div class="stress-bar" style="width:${Math.abs(pnl)/maxAbs*100}%;background:${pnl>=0?'#22c55e':'#ef4444'}"></div>
+      </div>
+      <span class="mono" style="font-size:11px;color:${pnl>=0?'#22c55e':'#ef4444'};width:100px;text-align:right">${fmtUSD(pnl)}</span>
+    </div>`).join('');
+
+  const expData = [m.gross_exp, m.net_exp, CAPITAL];
+  const expLabels = ['Gross Exp', 'Net Exp', 'Capital'];
+  if(!charts.exp) {
+    const ctx = document.getElementById('exp-chart').getContext('2d');
+    charts.exp = new Chart(ctx, {
+      type:'bar', data:{labels:expLabels,datasets:[{data:expData,backgroundColor:['#3b82f6','#a78bfa','#555'],borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{display:false},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10}}},
+                y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},callback:v=>'$'+(v/1000).toFixed(0)+'k'}}}}
+    });
+  } else {
+    charts.exp.data.datasets[0].data = expData;
+    charts.exp.update();
+  }
+
+  const corr = r.corr || {};
+  const corrStrats = Object.keys(corr);
+  if(corrStrats.length >= 2) {
+    const rows = corrStrats.map(s1 =>
+      `<tr><td style="color:var(--t2);text-align:left">${s1}</td>${corrStrats.map(s2=>{
+        const v = (corr[s1]||{})[s2];
+        if(v==null) return '<td>—</td>';
+        const abs = Math.abs(v);
+        const bg = v>0.5?'rgba(239,68,68,.15)':v<-0.5?'rgba(34,197,94,.15)':'transparent';
+        return `<td style="background:${bg};color:${v>0.7?'#ef4444':v<-0.7?'#22c55e':'var(--t1)'}">${fmt(v,2)}</td>`;
+      }).join('')}</tr>`
+    ).join('');
+    document.getElementById('corr-body').innerHTML = `
+      <div style="overflow-x:auto">
+        <table class="corr-table">
+          <thead><tr><th></th>${corrStrats.map(s=>`<th>${s}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+}
+
+function renderGreeks(g) {
+  const defs = [
+    {sym:'Δ', name:'Delta', val:g.delta, lbl:'sensibilité prix'},
+    {sym:'Γ', name:'Gamma', val:g.gamma, lbl:'convexité delta'},
+    {sym:'Θ', name:'Theta', val:g.theta, lbl:'$/jour time decay'},
+    {sym:'V', name:'Vega',  val:g.vega,  lbl:'sensibilité IV'},
+  ];
+  document.getElementById('greek-grid').innerHTML = defs.map(d=>`
+    <div class="greek-item">
+      <div class="greek-sym">${d.sym}</div>
+      <div class="greek-val ${cc(d.val)}">${fmt(d.val,d.name==='Gamma'?4:2)}</div>
+      <div class="greek-lbl">${d.lbl}</div>
+    </div>`).join('');
+
+  const range = Array.from({length:21},(_,i)=>((i-10)/100));
+  const pnl_scenario = range.map(chg => {
+    const delta_pnl = (g.delta||0) * chg * 100;
+    const gamma_pnl = 0.5 * (g.gamma||0) * Math.pow(chg*100,2);
+    return delta_pnl + gamma_pnl;
+  });
+  const labels = range.map(r=>(r>=0?'+':'')+fmt(r*100,1)+'%');
+  if(!charts.pnlScen) {
+    const ctx = document.getElementById('pnl-scenario-chart').getContext('2d');
+    charts.pnlScen = new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:[{
+        label:'P&L options estimé',
+        data:pnl_scenario,
+        borderColor:'#a78bfa',
+        backgroundColor:'rgba(167,139,250,.1)',
+        borderWidth:1.5, pointRadius:0, fill:true, tension:.3
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},maxTicksLimit:7}},
+                y:{grid:{color:'#1e1e1e'},ticks:{color:'#555',font:{family:'JetBrains Mono',size:10},callback:v=>fmtUSD(v)}}}}
+    });
+  } else {
+    charts.pnlScen.data.datasets[0].data = pnl_scenario;
+    charts.pnlScen.update();
+  }
+}
+
+const CAPITAL = 1090000;
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
