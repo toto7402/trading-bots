@@ -11,6 +11,11 @@ ClientId : 9
 """
 
 from flask import Flask, jsonify, request
+try:
+    from news_signals import get_engine as get_news_engine
+    NEWS_ENABLED = True
+except ImportError:
+    NEWS_ENABLED = False
 from ib_insync import IB, util
 import threading, time, os, json
 import numpy as np
@@ -38,7 +43,7 @@ STRATEGIES = {
 state = {
     'positions': [], 'metrics': {}, 'nav_history': [],
     'strategy_perf': {}, 'greeks': {}, 'risk': {},
-    'alerts': [], 'last_update': None, 'connected': False,
+    'alerts': [], 'news': {}, 'last_update': None, 'connected': False,
 }
 state_lock = threading.Lock()
 ib = IB()
@@ -288,6 +293,20 @@ def fetch_data():
                 })
             alerts = alerts[:30]
 
+            # News signals
+            news_summary = {}
+            if NEWS_ENABLED:
+                try:
+                    news_summary = get_news_engine().get_summary()
+                    if news_summary.get('blocked'):
+                        alerts.insert(0, {
+                            'time': datetime.now().strftime('%H:%M:%S'),
+                            'type': 'warning',
+                            'msg': f'MACRO BLOCK actif — bots suspendus jusqu\'à {news_summary["blocking_until"]}'
+                        })
+                except Exception:
+                    pass
+
             with state_lock:
                 state.update({
                     'positions':     sorted(positions, key=lambda x: -abs(x['mkt_value'])),
@@ -297,6 +316,7 @@ def fetch_data():
                     'greeks':        greeks,
                     'risk':          risk,
                     'alerts':        alerts,
+                    'news':          news_summary,
                     'last_update':   datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     'connected':     True,
                 })

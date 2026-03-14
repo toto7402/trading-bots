@@ -155,6 +155,7 @@ tr:hover td { background:var(--s2); }
   <div class="tab" onclick="showTab('positions')">Positions</div>
   <div class="tab" onclick="showTab('risk')">Risk</div>
   <div class="tab" onclick="showTab('greeks')">Greeks</div>
+  <div class="tab" onclick="showTab('news')">News & Signals</div>
 </div>
 
 <!-- ── TAB: OVERVIEW ── -->
@@ -256,6 +257,21 @@ tr:hover td { background:var(--s2); }
   </div>
 </div>
 
+<!-- ── TAB: NEWS ── -->
+<div class="panel" id="tab-news">
+  <div class="kpi-grid" id="kpi-news"></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Signaux récents</span><span class="mono" style="font-size:11px;color:var(--t3)" id="news-cnt">0</span></div>
+      <div class="card-body"><div id="news-list"><div class="no-al">Aucun signal</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Annonces macro à venir</span></div>
+      <div class="card-body"><div id="macro-list"><div class="no-al">Aucune annonce haute impact dans les 60 prochaines minutes</div></div></div>
+    </div>
+  </div>
+</div>
+
 <script>
 let charts = {};
 let activeStrat = 'all';
@@ -263,7 +279,7 @@ let lastData = null;
 
 function showTab(id) {
   document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['overview','strategies','positions','risk','greeks'][i] === id);
+    t.classList.toggle('active', ['overview','strategies','positions','risk','greeks','news'][i] === id);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-' + id).classList.add('active');
@@ -296,6 +312,7 @@ function load() {
     renderPositions(d.positions||[], sp);
     renderRisk(m, r);
     renderGreeks(g);
+    renderNews(d.news||{});
   }).catch(e => console.error(e));
 }
 
@@ -523,6 +540,49 @@ function renderGreeks(g) {
     charts.pnlScen.data.datasets[0].data = pnl_scenario;
     charts.pnlScen.update();
   }
+}
+
+function renderNews(n) {
+  const kpis = [
+    {l:'Signaux aujourd\'hui', v:n.signals_today||0, c:'neu'},
+    {l:'Bullish', v:n.bullish||0, c:'up'},
+    {l:'Bearish', v:n.bearish||0, c:'dn'},
+    {l:'Statut bots', v:n.blocked?'BLOQUÉ':'ACTIF', c:n.blocked?'warn':'up'},
+  ];
+  document.getElementById('kpi-news').innerHTML = kpis.map(k=>`
+    <div class="kpi"><div class="kpi-l">${k.l}</div><div class="kpi-v ${k.c}">${k.v}</div></div>`).join('');
+
+  const signals = (n.recent_signals||[]).slice().reverse();
+  document.getElementById('news-cnt').textContent = signals.length;
+  document.getElementById('news-list').innerHTML = signals.length===0
+    ? '<div class="no-al">Aucun signal récent</div>'
+    : signals.map(s=>`
+      <div class="al ${s.action==='BULLISH'?'al-i':s.action==='BEARISH'?'al-d':'al-w'}" style="margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <strong>${s.ticker}</strong>
+          <span class="mono" style="font-size:10px;color:var(--t3)">${s.time.slice(11,16)}</span>
+        </div>
+        <div style="font-size:11px;margin-bottom:4px">${s.headline}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge ${s.action==='BULLISH'?'badge-long':'badge-short'}">${s.action} ${(s.score>=0?'+':'')+fmt(s.score,2)}</span>
+          ${(s.events||[]).map(e=>`<span class="badge" style="background:rgba(167,139,250,.12);color:#a78bfa">${e}</span>`).join('')}
+        </div>
+      </div>`).join('');
+
+  const macro = n.macro_upcoming||[];
+  document.getElementById('macro-list').innerHTML = macro.length===0
+    ? '<div class="no-al">Aucune annonce haute impact dans les 60 prochaines minutes</div>'
+    : macro.map(m=>`
+      <div class="stress-row">
+        <div>
+          <div style="font-weight:500;font-size:12px">${m.event}</div>
+          <div class="mono" style="font-size:10px;color:var(--t3)">Dans ${m.in_min} min (${m.time})</div>
+        </div>
+        <div style="text-align:right">
+          ${m.actual?`<div class="mono" style="font-size:11px">Réel: ${m.actual}</div>`:''}
+          ${m.estimate?`<div class="mono" style="font-size:10px;color:var(--t3)">Est: ${m.estimate}</div>`:''}
+        </div>
+      </div>`).join('');
 }
 
 const CAPITAL = 1090000;
