@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-HOST         = '127.0.0.1'
+HOST      = '127.0.0.1'
 PORT         = 7497
 CLIENT_ID    = 1
 CAPITAL      = 50_000
