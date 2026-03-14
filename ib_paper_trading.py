@@ -43,6 +43,14 @@ UNIVERSE = list(dict.fromkeys([
 ]))
 
 
+
+def kelly_fraction(win_rate: float = 0.655, avg_win: float = 0.08,
+                   avg_loss: float = 0.04, fraction: float = 0.25) -> float:
+    """Kelly fractionné — fraction=0.25 = Kelly/4 (conservateur)."""
+    b = avg_win / avg_loss
+    f = (win_rate * b - (1 - win_rate)) / b
+    return max(0.0, min(f * fraction, 0.08))  # cap à 8% par position
+
 def connect() -> IB:
     ib = IB()
     ib.connect(HOST, PORT, clientId=CLIENT_ID)
@@ -244,7 +252,7 @@ def rebalance(ib: IB, peak_capital: float) -> float:
         return get_account_value(ib)
 
     nav        = get_account_value(ib)
-    pos_target = nav * MAX_POS_PCT
+    pos_target = nav * kelly_fraction()  # Kelly fractionné
     log.info(f"NAV : ${nav:,.0f} | Position cible : ${pos_target:,.0f}")
 
     hist_prices = load_historical_prices()
