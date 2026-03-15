@@ -115,9 +115,13 @@ def fetch_recent_spinoffs():
     # Fallback : liste statique de spin-offs connus récents (2024-2025)
     # A mettre a jour manuellement ou via un flux RSS
     known_recent = [
-        {'ticker': 'SOLV',  'name': 'Solventum (3M spinoff)',   'date': '2024-04-01', 'price': 0},
-        {'ticker': 'VLTO',  'name': 'Veralto (Danaher spinoff)','date': '2023-10-01', 'price': 0},
-        {'ticker': 'KENVUE','name': 'Kenvue (J&J spinoff)',     'date': '2023-05-04', 'price': 0},
+        {'ticker': 'VSNT',  'name': 'Versant Media (Comcast spinoff)',       'date': '2026-01-02', 'price': 0},
+        {'ticker': 'LLYVA', 'name': 'Liberty Live Holdings A (Liberty Media)', 'date': '2025-12-16', 'price': 0},
+        {'ticker': 'LLYVK', 'name': 'Liberty Live Holdings K (Liberty Media)', 'date': '2025-12-16', 'price': 0},
+        {'ticker': 'SOLAM', 'name': 'Solstice Advanced Materials (Honeywell)', 'date': '2025-10-30', 'price': 0},
+        {'ticker': 'Q',     'name': 'Qnity Electronics (DuPont)',              'date': '2025-11-01', 'price': 0},
+        {'ticker': 'GLIBA', 'name': 'GCI Liberty A (Liberty Broadband)',       'date': '2025-07-15', 'price': 0},
+        {'ticker': 'GLIBK', 'name': 'GCI Liberty K (Liberty Broadband)',       'date': '2025-07-15', 'price': 0},
     ]
 
     for k in known_recent:

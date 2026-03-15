@@ -42,7 +42,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
-HOST       = '127.0.0.1'
+HOST      = '127.0.0.1'
 PORT       = 7497
 CLIENT_ID  = 9          # clientId dédié au dashboard
 CAPITAL    = 50_000
