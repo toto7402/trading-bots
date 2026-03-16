@@ -78,7 +78,7 @@ def connect() -> IB:
 
 def get_nav(ib: IB) -> float:
     for v in ib.accountValues():
-        if v.tag == 'NetLiquidation' and v.currency == 'USD':
+        if v.tag == 'NetLiquidation' and v.currency in ('USD', 'EUR', 'BASE'):
             return float(v.value)
     return CAPITAL
 

@@ -16,7 +16,7 @@ import os, sys, re, time, json, logging, requests
 from datetime import datetime, timedelta, date
 import numpy as np
 import pandas as pd
-from ib_insync import IB, Stock, ETF, LimitOrder
+from ib_insync import IB, Stock, LimitOrder
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
@@ -202,7 +202,7 @@ def connect():
 
 def get_nav(ib):
     for v in ib.accountValues():
-        if v.tag == 'NetLiquidation' and v.currency == 'USD':
+        if v.tag == 'NetLiquidation' and v.currency in ('USD', 'EUR', 'BASE'):
             return float(v.value)
     return CAPITAL
 

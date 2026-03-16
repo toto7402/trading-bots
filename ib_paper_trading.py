@@ -61,7 +61,7 @@ def connect() -> IB:
 def get_account_value(ib: IB) -> float:
     vals = ib.accountValues()
     for v in vals:
-        if v.tag == 'NetLiquidation' and v.currency == 'USD':
+        if v.tag == 'NetLiquidation' and v.currency in ('USD', 'EUR', 'BASE'):
             return float(v.value)
     return CAPITAL
 
