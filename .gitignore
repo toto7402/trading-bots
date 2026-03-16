@@ -39,3 +39,6 @@ desktop.ini
 *.swp
 *.swo
 ~$*
+news_signals_log.json
+*.log
+*.csv
