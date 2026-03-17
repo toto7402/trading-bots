@@ -572,7 +572,7 @@ def main():
         while True:
             now = datetime.now()
             weekday = now.weekday()
-            hour    = now.hour + now.minute / 60
+            hour    = (now.hour - 5) + now.minute / 60  # UTC -> ET
 
             market_open = (weekday < 5 and 9.5 <= hour <= 16.0)
 
