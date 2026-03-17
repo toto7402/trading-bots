@@ -546,8 +546,8 @@ def main():
         now = datetime.now()
         if now.weekday() >= 5:
             return False
-        market_open  = now.replace(hour=9, minute=30, second=0)
-        market_close = now.replace(hour=16, minute=0, second=0)
+        market_open  = now.replace(hour=14, minute=30, second=0)
+        market_close = now.replace(hour=21, minute=0, second=0)
         return market_open <= now <= market_close
 
     # Lundi 10h00 : Covered Calls + Bull Put Spreads

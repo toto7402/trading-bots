@@ -422,7 +422,7 @@ def main():
     def market_open():
         now = datetime.now()
         return (now.weekday() < 5 and
-                now.replace(hour=9, minute=30) <= now <= now.replace(hour=15, minute=55))
+                now.replace(hour=14, minute=30) <= now <= now.replace(hour=15, minute=55))
 
     # Lundi 10h15 : Covered Calls + Iron Condor
     schedule.every().monday.at("10:15").do(
