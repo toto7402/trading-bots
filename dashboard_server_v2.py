@@ -38,6 +38,11 @@ STRATEGIES = {
     'Options':     {'color': '#d4537e', 'csv': 'options_positions.csv'},
     'ETF_Options': {'color': '#639922', 'csv': 'etf_options_positions.csv'},
     'Futures':     {'color': '#888780', 'csv': 'futures_positions.csv'},
+'MR_Intraday':  {'color': '#06b6d4', 'csv': 'mr_positions.csv'},
+ 'ETF_Mom':      {'color': '#f59e0b', 'csv': 'etf_mom_positions.csv'},
+ 'Pairs':        {'color': '#ec4899', 'csv': 'pairs_positions.csv'},
+ 'Breakout':     {'color': '#84cc16', 'csv': 'breakout_positions.csv'},
+ 'News':         {'color': '#f97316', 'csv': 'news_trading_positions.csv'},
 }
 
 state = {
@@ -114,8 +119,9 @@ def fetch_data():
         try:
             if not ib.isConnected():
                 connect_ib()
-                time.sleep(5)
-                continue
+                if not ib.isConnected():
+                    time.sleep(10)
+                    continue  # garde les dernieres donnees si deja presentes
 
             portfolio_map = {item.contract.symbol: item for item in ib.portfolio()}
             positions_raw = list(ib.positions())
@@ -324,7 +330,8 @@ def fetch_data():
         except Exception as e:
             print(f"Fetch error: {e}")
             with state_lock:
-                state['connected'] = False
+                state["connected"] = False
+            pass  # garde les dernieres donnees connues
 
         time.sleep(REFRESH_S)
 
