@@ -43,6 +43,9 @@ PORT        = 7497
 CLIENT_ID   = 6
 CAPITAL     = 1_090_000
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
+if not FINNHUB_KEY:
+    print("WARNING: Variable d'environnement FINNHUB_KEY manquante. "
+          "Les stratégies dépendant de Finnhub seront désactivées.")
 
 # Paramètres options
 CC_DELTA_TARGET   = 0.30   # Covered Call : delta ~0.30 (OTM)

@@ -461,11 +461,16 @@ class PairsBot:
                     self.run_cycle()
                     self.ib.sleep(300)
                 else:
-                    all_t = list(set(t for p in self.PAIRS for t in p))
-                    for t in all_t:
-                        for pk, p in list(self.pos.items()):
-                            if t in pk:
-                                action = 'SELL' if p['dir']=='LONG_SPREAD' else 'BUY'
+                    for pk, p in list(self.pos.items()):
+                        parts = pk.split('_')
+                        tx, ty = parts[0], parts[1]
+                        if p['dir'] == 'LONG_SPREAD':
+                            place_order(self.ib, tx, 'SELL', p['sx'])
+                            place_order(self.ib, ty, 'BUY',  p['sy'])
+                        else:
+                            place_order(self.ib, tx, 'BUY',  p['sx'])
+                            place_order(self.ib, ty, 'SELL', p['sy'])
+                        del self.pos[pk]
                     self.ib.sleep(60)
             except Exception as e:
                 alert_manager.notify_crash('pairs_bot', str(e))

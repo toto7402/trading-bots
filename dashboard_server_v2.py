@@ -38,11 +38,11 @@ STRATEGIES = {
     'Options':     {'color': '#d4537e', 'csv': 'options_positions.csv'},
     'ETF_Options': {'color': '#639922', 'csv': 'etf_options_positions.csv'},
     'Futures':     {'color': '#888780', 'csv': 'futures_positions.csv'},
-'MR_Intraday':  {'color': '#06b6d4', 'csv': 'mr_positions.csv'},
- 'ETF_Mom':      {'color': '#f59e0b', 'csv': 'etf_mom_positions.csv'},
- 'Pairs':        {'color': '#ec4899', 'csv': 'pairs_positions.csv'},
- 'Breakout':     {'color': '#84cc16', 'csv': 'breakout_positions.csv'},
- 'News':         {'color': '#f97316', 'csv': 'news_trading_positions.csv'},
+    'MR_Intraday':  {'color': '#06b6d4', 'csv': 'mr_positions.csv'},
+    'ETF_Mom':      {'color': '#f59e0b', 'csv': 'etf_mom_positions.csv'},
+    'Pairs':        {'color': '#ec4899', 'csv': 'pairs_positions.csv'},
+    'Breakout':     {'color': '#84cc16', 'csv': 'breakout_positions.csv'},
+    'News':         {'color': '#f97316', 'csv': 'news_trading_positions.csv'},
 }
 
 state = {

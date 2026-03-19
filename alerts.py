@@ -142,8 +142,8 @@ class AlertManager:
     # ── Envoi Telegram ────────────────────────────────────────────────────────
 
     def _send(self, text: str):
-        if TELEGRAM_TOKEN.startswith("VOTRE"):
-            log.warning("AlertManager : TELEGRAM_TOKEN non configuré, alerte ignorée.")
+        if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+            log.warning("AlertManager : TELEGRAM_TOKEN ou TELEGRAM_CHAT_ID manquant — alerte ignorée.")
             print(f"  [ALERTE NON ENVOYÉE — Telegram non configuré]\n  {text}")
             return
         try:

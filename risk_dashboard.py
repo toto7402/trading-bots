@@ -44,8 +44,8 @@ log = logging.getLogger(__name__)
 # ── Config ────────────────────────────────────────────────────────────────────
 HOST      = '127.0.0.1'
 PORT       = 7497
-CLIENT_ID  = 9          # clientId dédié au dashboard
-CAPITAL    = 50_000
+CLIENT_ID  = 20         # clientId dédié au risk dashboard (dashboard_server utilise 9)
+CAPITAL    = 1_090_000
 REFRESH_S  = 60         # rafraîchissement en secondes
 
 # CSV des stratégies arb

@@ -572,9 +572,10 @@ def main():
         while True:
             now = datetime.now()
             weekday = now.weekday()
-            hour    = (now.hour - 5) + now.minute / 60  # UTC -> ET
+            # Heure locale machine (pas de conversion UTC hardcodée)
+            hour_local = now.hour + now.minute / 60
 
-            market_open = (weekday < 5 and 9.5 <= hour <= 16.0)
+            market_open = (weekday < 5 and 9.5 <= hour_local <= 16.0)
 
             if market_open:
                 bot.run_cycle()
