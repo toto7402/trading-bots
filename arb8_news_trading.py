@@ -37,7 +37,7 @@ PORT         = 4002
 CLIENT_ID   = 11
 CAPITAL     = 1_090_000
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
-MAX_LEVER   = 2.0
+MAX_LEVER   = 5.0
 STOP_LOSS   = -0.10
 SCAN_INTERVAL = 300  # 5 minutes
 CSV_FILE    = 'news_trading_positions.csv'
@@ -193,9 +193,6 @@ def analyze_with_claude(headline, body=''):
 
 def connect():
     ib = IB()
-    while datetime.now().weekday() >= 5:
-        log.info("Weekend -- attente...")
-        time.sleep(3600)
     ib.connect(HOST, PORT, clientId=CLIENT_ID)
     log.info(f"Connecte : {ib.wrapper.accounts}")
     return ib
@@ -504,6 +501,43 @@ class NewsTradingBot:
                     f"{result.get('reasoning', '')}"
                 )
 
+
+    def run_cycle_forex(self):
+        if self.check_stop_loss(): return
+        self.close_expired()
+        FOREX_INST = {
+            'GEO_OIL_UP':   {'buy': ['USO'], 'sell': []},
+            'GEO_OIL_DOWN': {'buy': [], 'sell': ['USO']},
+            'GEO_GOLD_UP':  {'buy': ['GLD', 'GDX'], 'sell': []},
+            'GEO_GOLD_DOWN':{'buy': [], 'sell': ['GLD']},
+            'MACRO_RISK_OFF':{'buy': ['GLD', 'TLT'], 'sell': []},
+            'MACRO_RISK_ON': {'buy': [], 'sell': ['GLD', 'TLT']},
+        }
+        news_items = fetch_finnhub_news(['GLD', 'USO', 'TLT', 'GDX'])
+        for item in news_items:
+            item_id = item.get('id', '')
+            if item_id in self.processed: continue
+            self.processed.add(item_id)
+            headline = item.get('headline', '').strip()
+            if len(headline) < 15: continue
+            try:
+                from news_signals import analyze as nlp_analyze
+                signals = nlp_analyze(headline, item.get('body', ''))
+                for sig, score, desc in signals:
+                    if sig in FOREX_INST and abs(score) >= 0.6:
+                        result = {'signal': sig, 'confidence': abs(score),
+                                  'reasoning': desc, 'tickers': [],
+                                  'sector_etf': None, 'ma_target': None,
+                                  'hold_days_override': 3}
+                        old_inst = SIGNAL_TO_INSTRUMENTS.get(sig, {})
+                        SIGNAL_TO_INSTRUMENTS[sig] = FOREX_INST[sig]
+                        self.execute_signal(result, headline)
+                        SIGNAL_TO_INSTRUMENTS[sig] = old_inst
+                        break
+            except Exception as e:
+                log.debug(f'Forex NLP: {e}')
+        log.info(f'Cycle forex OK | {len(self.positions)} positions')
+
     def run_cycle(self):
         if self.check_stop_loss():
             return
@@ -575,10 +609,19 @@ def main():
             # Heure locale machine (pas de conversion UTC hardcodée)
             hour_local = now.hour + now.minute / 60
 
-            market_open = (weekday < 5 and 9.5 <= hour_local <= 16.0)
-
-            if market_open:
+            from datetime import timezone
+            now_utc = datetime.now(timezone.utc)
+            hour_utc = now_utc.hour + now_utc.minute / 60
+            weekday = now_utc.weekday()
+            us_open = (weekday < 5 and 14.5 <= hour_utc <= 21.0)
+            fri_close = (weekday == 4 and hour_utc >= 21.0)
+            forex_open = not (fri_close or weekday == 5 or (weekday == 6 and hour_utc < 22.0))
+            if us_open:
+                bot.WEEKEND_MODE = False
                 bot.run_cycle()
+            elif forex_open:
+                bot.WEEKEND_MODE = True
+                bot.run_cycle_forex()
             else:
                 log.info("Marche ferme")
 
