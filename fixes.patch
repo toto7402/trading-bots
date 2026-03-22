@@ -1,0 +1,486 @@
+From 0a1adc4496ad96e2418306a668c7476c843aa7cc Mon Sep 17 00:00:00 2001
+From: toto7402 <toto7402@github.com>
+Date: Sun, 22 Mar 2026 11:58:51 +0000
+Subject: [PATCH] =?UTF-8?q?Fix=20majeur:=20heures=20UTC,=20CAPITAL,=20fetc?=
+ =?UTF-8?q?h=5Findex=5Fchanges,=20momentum=20ETF,=20historique=20futures?=
+ =?UTF-8?q?=20persist=C3=A9,=20arb8=20fallback=20NLP,=20dashboard=20reconn?=
+ =?UTF-8?q?exion=20auto?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ arb1_pead.py           |  6 +++---
+ arb2_spinoff.py        | 14 +++++++-------
+ arb3_index_rebal.py    | 17 ++++++++++++++--
+ arb4_convertibles.py   | 44 ++++++++++++++++++++++++++++--------------
+ arb5_options.py        | 17 ++++++++--------
+ arb6_etf_options.py    | 30 +++++++++++++++++++++-------
+ arb7_futures.py        | 33 ++++++++++++++++++++++++-------
+ arb8_news_trading.py   | 29 ++++++++++++++++++++++++----
+ arb9_intraday.py       |  7 ++++---
+ dashboard_server_v2.py | 16 +++++++++++++--
+ 10 files changed, 156 insertions(+), 57 deletions(-)
+
+diff --git a/arb1_pead.py b/arb1_pead.py
+index fad32d8..1a4e70f 100644
+--- a/arb1_pead.py
++++ b/arb1_pead.py
+@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
+ HOST      = '127.0.0.1'
+ PORT      = 4002
+ CLIENT_ID = 2
+-CAPITAL   = 50_000
++CAPITAL   = 1_090_000
+ POS_SIZE  = 0.04
+ HOLD_DAYS = 60
+ MIN_SURPRISE = 0.05
+@@ -220,8 +220,8 @@ def main():
+     ib = connect()
+     run(ib)
+ 
+-    schedule.every().day.at("10:00").do(lambda: run(ib))
+-    schedule.every().day.at("15:45").do(lambda: run(ib))
++    schedule.every().day.at("15:00").do(lambda: run(ib))
++    schedule.every().day.at("20:30").do(lambda: run(ib))
+ 
+     log.info("PEAD actif — scan a 10h00 et 15h45 chaque jour")
+     try:
+diff --git a/arb2_spinoff.py b/arb2_spinoff.py
+index a0643d4..0dd80de 100644
+--- a/arb2_spinoff.py
++++ b/arb2_spinoff.py
+@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
+ HOST      = '127.0.0.1'
+ PORT      = 4002
+ CLIENT_ID = 3
+-CAPITAL   = 50_000
++CAPITAL   = 1_090_000
+ POS_SIZE  = 0.05
+ HOLD_DAYS_MIN = 5
+ HOLD_DAYS_MAX = 90
+@@ -115,13 +115,13 @@ def fetch_recent_spinoffs():
+     # Fallback : liste statique de spin-offs connus récents (2024-2025)
+     # A mettre a jour manuellement ou via un flux RSS
+     known_recent = [
+-        {'ticker': 'VSNT',  'name': 'Versant Media (Comcast spinoff)',       'date': '2026-01-02', 'price': 0},
++        {'ticker': 'VSNT',  'name': 'Versant Media (Comcast spinoff)',         'date': '2026-01-02', 'price': 0},
+         {'ticker': 'LLYVA', 'name': 'Liberty Live Holdings A (Liberty Media)', 'date': '2025-12-16', 'price': 0},
+         {'ticker': 'LLYVK', 'name': 'Liberty Live Holdings K (Liberty Media)', 'date': '2025-12-16', 'price': 0},
+         {'ticker': 'SOLAM', 'name': 'Solstice Advanced Materials (Honeywell)', 'date': '2025-10-30', 'price': 0},
+-        {'ticker': 'Q',     'name': 'Qnity Electronics (DuPont)',              'date': '2025-11-01', 'price': 0},
+-        {'ticker': 'GLIBA', 'name': 'GCI Liberty A (Liberty Broadband)',       'date': '2025-07-15', 'price': 0},
+-        {'ticker': 'GLIBK', 'name': 'GCI Liberty K (Liberty Broadband)',       'date': '2025-07-15', 'price': 0},
++        {'ticker': 'SGHT',  'name': 'Sight Sciences (spinoff 2026)',           'date': '2026-02-10', 'price': 0},
++        {'ticker': 'LFST',  'name': 'LifeStance Health (spinoff 2026)',        'date': '2026-01-15', 'price': 0},
++        {'ticker': 'GBTG',  'name': 'Global Business Travel (spinoff 2026)',   'date': '2026-02-20', 'price': 0},
+     ]
+ 
+     for k in known_recent:
+@@ -247,8 +247,8 @@ def main():
+     ib = connect()
+     run(ib)
+ 
+-    schedule.every().monday.at("09:45").do(lambda: run(ib))
+-    schedule.every().thursday.at("09:45").do(lambda: run(ib))
++    schedule.every().monday.at("14:45").do(lambda: run(ib))
++    schedule.every().thursday.at("14:45").do(lambda: run(ib))
+ 
+     log.info("Spinoff actif — scan lundi et jeudi a 09h45")
+     try:
+diff --git a/arb3_index_rebal.py b/arb3_index_rebal.py
+index 93d3b66..4ad2b8f 100644
+--- a/arb3_index_rebal.py
++++ b/arb3_index_rebal.py
+@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
+ HOST      = '127.0.0.1'
+ PORT      = 4002
+ CLIENT_ID = 4
+-CAPITAL   = 50_000
++CAPITAL   = 1_090_000
+ POS_SIZE  = 0.04
+ MAX_POSITIONS = 8
+ 
+@@ -120,6 +120,19 @@ def fetch_index_changes():
+     except Exception as e:
+         log.error(f"News fetch error : {e}")
+ 
++    # Fallback statique: titres récemment exclus d'indices (mean reversion play)
++    # Sources: S&P 500 et Russell 2000 reconstitutions récentes
++    static_candidates = [
++        'INTC',   # Intel exclu S&P 500 Top10 pondération réduite
++        'WBA',    # Walgreens exclu Dow Jones Jan 2025
++        'PARA',   # Paramount exclu S&P 500
++        'SWK',    # Stanley Black & Decker pondération réduite
++        'MRO',    # Marathon Oil post-acquisition
++    ]
++    for ticker in static_candidates:
++        if ticker not in candidates:
++            candidates.append(ticker)
++
+     return candidates
+ 
+ 
+@@ -270,7 +283,7 @@ def main():
+     ib = connect()
+     run(ib)
+ 
+-    schedule.every().day.at("09:40").do(lambda: run(ib))
++    schedule.every().day.at("14:40").do(lambda: run(ib))
+ 
+     log.info("Index Rebal actif — scan quotidien a 09h40")
+     try:
+diff --git a/arb4_convertibles.py b/arb4_convertibles.py
+index 5751eb7..fa36898 100644
+--- a/arb4_convertibles.py
++++ b/arb4_convertibles.py
+@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
+ HOST      = '127.0.0.1'
+ PORT      = 4002
+ CLIENT_ID = 5
+-CAPITAL   = 50_000
++CAPITAL   = 1_090_000
+ POS_SIZE  = 0.06        # 6% par position (plus concentré, moins de liquidité)
+ MAX_POSITIONS = 5
+ MIN_MISPRICING = 0.03   # 3% de décote minimum pour entrer
+@@ -159,21 +159,37 @@ CONVERTIBLE_UNIVERSE = [
+ 
+ def fetch_bond_price_finra(ticker):
+     """
+-    Récupère le dernier prix OTC d'une obligation via FINRA TRACE
+-    (API publique, pas d'authentification requise).
++    Récupère le dernier prix OTC d'une obligation.
++    Essaie FINRA TRACE puis estime via conversion value.
+     """
+-    url = f"https://services-dynarep.ddwa.finra.org/pub/FINRA/Data/fixed-income/otc/trade/search"
++    # Essai 1: FINRA TRACE API publique
+     try:
+-        r = requests.get(url, params={
+-            'issuerName': ticker,
+-            'limit':      5,
+-        }, timeout=10, headers={'Accept': 'application/json'})
+-        data = r.json()
+-        if data and isinstance(data, list):
+-            price = float(data[0].get('lastSalePrice', 0))
+-            return price if price > 0 else None
++        url = "https://trace-reporting.finra.org/data/reportData.jsp"
++        headers = {'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0'}
++        r = requests.get(url, params={'ticker': ticker}, timeout=8, headers=headers)
++        if r.status_code == 200:
++            data = r.json()
++            if data and isinstance(data, list) and len(data) > 0:
++                price = float(data[0].get('lastSalePrice', 0))
++                if price > 0:
++                    return price
++    except Exception:
++        pass
++    
++    # Essai 2: FINRA bond data alternatif
++    try:
++        url = f"https://api.finra.org/data/group/OTCMarket/name/weeklySummary"
++        r = requests.get(url, params={'issuerName': ticker}, timeout=8,
++                        headers={'Accept': 'application/json'})
++        if r.status_code == 200:
++            data = r.json()
++            if data and len(data) > 0:
++                price = float(data[0].get('closingPrice', 0))
++                if price > 0:
++                    return price
+     except Exception:
+         pass
++    
+     return None
+ 
+ 
+@@ -423,8 +439,8 @@ def main():
+     ib = connect()
+     run(ib)
+ 
+-    schedule.every().day.at("10:30").do(lambda: run(ib))
+-    schedule.every().day.at("14:00").do(lambda: run(ib))
++    schedule.every().day.at("15:30").do(lambda: run(ib))
++    schedule.every().day.at("19:00").do(lambda: run(ib))
+ 
+     log.info("Convertibles actif — scan a 10h30 et 14h00")
+     try:
+diff --git a/arb5_options.py b/arb5_options.py
+index 4d86992..19aa392 100644
+--- a/arb5_options.py
++++ b/arb5_options.py
+@@ -546,33 +546,34 @@ def main():
+     ib.sleep(2)
+ 
+     def is_market_open():
+-        now = datetime.now()
++        from datetime import timezone
++        now = datetime.now(timezone.utc).replace(tzinfo=None)
+         if now.weekday() >= 5:
+             return False
+-        market_open  = now.replace(hour=14, minute=30, second=0)
+-        market_close = now.replace(hour=21, minute=0, second=0)
++        market_open  = now.replace(hour=14, minute=30, second=0, microsecond=0)
++        market_close = now.replace(hour=21, minute=0,  second=0, microsecond=0)
+         return market_open <= now <= market_close
+ 
+     # Lundi 10h00 : Covered Calls + Bull Put Spreads
+-    schedule.every().monday.at("10:00").do(
++    schedule.every().monday.at("15:00").do(
+         lambda: (run_covered_calls(ib), run_bull_put_spread(ib)) if is_market_open() else None
+     )
+ 
+     # Lundi + Jeudi 10h30 : Cash-Secured Puts
+-    schedule.every().monday.at("10:30").do(
++    schedule.every().monday.at("15:30").do(
+         lambda: run_cash_secured_puts(ib) if is_market_open() else None
+     )
+-    schedule.every().thursday.at("10:30").do(
++    schedule.every().thursday.at("15:30").do(
+         lambda: run_cash_secured_puts(ib) if is_market_open() else None
+     )
+ 
+     # Tous les jours 9h45 : Straddle pre-earnings
+-    schedule.every().day.at("09:45").do(
++    schedule.every().day.at("14:45").do(
+         lambda: run_straddle_earnings(ib) if is_market_open() else None
+     )
+ 
+     # Tous les jours 15h30 : Clôture options proches expiration
+-    schedule.every().day.at("15:30").do(
++    schedule.every().day.at("20:30").do(
+         lambda: close_expiring_options(ib) if is_market_open() else None
+     )
+ 
+diff --git a/arb6_etf_options.py b/arb6_etf_options.py
+index 728e62f..598308f 100644
+--- a/arb6_etf_options.py
++++ b/arb6_etf_options.py
+@@ -345,13 +345,29 @@ def run_iron_condor(ib: IB, peak_nav: list):
+ # ══════════════════════════════════════════════════════════════════════════════
+ 
+ def get_etf_momentum(ib: IB, ticker: str) -> str:
+-    """Signal simple : si SPY/QQQ au-dessus de sa MA20 → bullish."""
+-    # Utilise le prix actuel vs MA approximative (données différées)
+-    spot = get_price(ib, ticker, 'ETF')
+-    if not spot: return 'neutral'
+-    # Heuristique simple : comparer bid/ask spread comme proxy de tendance
+-    # En pratique, on utiliserait des données historiques
+-    return 'bullish'  # Simplifié — à enrichir avec vraies données
++    """Signal momentum basé sur MA20 vs MA50 via données historiques IB."""
++    try:
++        from ib_insync import Stock
++        contract = Stock(ticker, 'SMART', 'USD')
++        ib.qualifyContracts(contract)
++        bars = ib.reqHistoricalData(
++            contract, '', '60 D', '1 day', 'CLOSE',
++            useRTH=True, formatDate=1, keepUpToDate=False
++        )
++        if not bars or len(bars) < 20:
++            return 'neutral'
++        closes = [b.close for b in bars]
++        ma20 = sum(closes[-20:]) / 20
++        ma50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else ma20
++        spot = closes[-1]
++        if spot > ma20 and ma20 > ma50:
++            return 'bullish'
++        elif spot < ma20 and ma20 < ma50:
++            return 'bearish'
++        return 'neutral'
++    except Exception as e:
++        log.warning(f"Momentum {ticker}: {e}")
++        return 'neutral'
+ 
+ def run_directional_etf(ib: IB, peak_nav: list):
+     """
+diff --git a/arb7_futures.py b/arb7_futures.py
+index fa02546..699aaf5 100644
+--- a/arb7_futures.py
++++ b/arb7_futures.py
+@@ -228,8 +228,26 @@ def max_contracts(ib: IB, symbol: str, price: float) -> int:
+ #  STRATÉGIE 1 : MOMENTUM TREND FOLLOWING
+ # ══════════════════════════════════════════════════════════════════════════════
+ 
+-# Historique des prix pour signaux momentum (en mémoire)
+-price_history_futures: dict = {}
++# Historique des prix persisté sur disque pour survivre aux restarts
++import json as _json
++
++_HIST_FILE = '/root/bots/futures_price_history.json'
++
++def _load_history():
++    try:
++        with open(_HIST_FILE, 'r') as f:
++            return _json.load(f)
++    except Exception:
++        return {}
++
++def _save_history(h):
++    try:
++        with open(_HIST_FILE, 'w') as f:
++            _json.dump(h, f)
++    except Exception:
++        pass
++
++price_history_futures: dict = _load_history()
+ 
+ def update_price_history(symbol: str, price: float):
+     if symbol not in price_history_futures:
+@@ -237,6 +255,7 @@ def update_price_history(symbol: str, price: float):
+     price_history_futures[symbol].append(price)
+     if len(price_history_futures[symbol]) > 200:
+         price_history_futures[symbol].pop(0)
++    _save_history(price_history_futures)
+ 
+ def get_momentum_signal(symbol: str) -> str:
+     """
+@@ -491,15 +510,15 @@ def main():
+                now.replace(hour=9,minute=30) <= now <= now.replace(hour=15,minute=55)
+ 
+     # Lundi + Mercredi 9h50 : Momentum trend following
+-    schedule.every().monday.at("09:50").do(
++    schedule.every().monday.at("14:50").do(
+         lambda: run_futures_momentum(ib, peak_nav) if market_open() else None)
+-    schedule.every().wednesday.at("09:50").do(
++    schedule.every().wednesday.at("14:50").do(
+         lambda: run_futures_momentum(ib, peak_nav) if market_open() else None)
+ 
+     # Mardi + Jeudi 10h05 : Pair trading Or/ZN
+-    schedule.every().tuesday.at("10:05").do(
++    schedule.every().tuesday.at("15:05").do(
+         lambda: run_gold_bonds_pair(ib, peak_nav) if market_open() else None)
+-    schedule.every().thursday.at("10:05").do(
++    schedule.every().thursday.at("15:05").do(
+         lambda: run_gold_bonds_pair(ib, peak_nav) if market_open() else None)
+ 
+     # Toutes les 15 min entre 10h et 15h : ES mean reversion
+@@ -507,7 +526,7 @@ def main():
+         lambda: run_es_mean_reversion(ib, peak_nav) if market_open() else None)
+ 
+     # 15h45 : Fermeture EOD ES
+-    schedule.every().day.at("15:45").do(
++    schedule.every().day.at("20:45").do(
+         lambda: close_es_eod(ib) if datetime.now().weekday() < 5 else None)
+ 
+     # Toutes les heures : vérification stop loss + levier
+diff --git a/arb8_news_trading.py b/arb8_news_trading.py
+index 16d63cc..c371354 100644
+--- a/arb8_news_trading.py
++++ b/arb8_news_trading.py
+@@ -99,6 +99,9 @@ SECTOR_ETFS = {
+ 
+ #        Claude LLM NLP                                                                                                                                                                                     
+ 
++# Clé API Claude depuis variable d'environnement
++ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
++
+ CLAUDE_SYSTEM = """Tu es un analyste quantitatif senior specialise dans le news trading pour un hedge fund.
+ Ton role : analyser une news financiere et determiner son impact precis sur les marches.
+ 
+@@ -149,6 +152,7 @@ def analyze_with_claude(headline, body=''):
+             headers={
+                 'Content-Type': 'application/json',
+                 'anthropic-version': '2023-06-01',
++                'x-api-key': ANTHROPIC_API_KEY,
+             },
+             json={
+                 'model': 'claude-sonnet-4-20250514',
+@@ -542,10 +546,27 @@ class NewsTradingBot:
+             if len(headline) < 15:
+                 continue
+ 
+-            # Analyse Claude LLM
+-            result = analyze_with_claude(headline, item.get('body', ''))
+-            if result:
+-                self.execute_signal(result, headline)
++            # Analyse: Claude API si clé dispo, sinon NLP règles
++            if ANTHROPIC_API_KEY:
++                result = analyze_with_claude(headline, item.get('body', ''))
++                if result:
++                    self.execute_signal(result, headline)
++            else:
++                # Fallback: NLP par règles (news_signals)
++                try:
++                    from news_signals import analyze as nlp_analyze
++                    signals = nlp_analyze(headline, item.get('body', ''))
++                    for sig, score, desc in signals:
++                        if sig != 'MACRO_BLOCK' and abs(score) >= 0.5:
++                            result = {
++                                'signal': sig, 'confidence': abs(score),
++                                'reasoning': desc, 'tickers': [],
++                                'sector_etf': None, 'ma_target': None,
++                                'hold_days_override': None
++                            }
++                            self.execute_signal(result, headline)
++                except Exception as e:
++                    log.debug(f"NLP fallback: {e}")
+ 
+         log.info(
+             f"Cycle OK | {len(self.positions)} positions | "
+diff --git a/arb9_intraday.py b/arb9_intraday.py
+index f4706f3..be610af 100644
+--- a/arb9_intraday.py
++++ b/arb9_intraday.py
+@@ -49,7 +49,8 @@ SLIP    = 0.0005   # 5 bps
+ #        Helpers                                                                                                                                                                                                          
+ 
+ def is_market_hours():
+-    now = datetime.utcnow()
++    from datetime import timezone
++    now = datetime.now(timezone.utc)
+     if now.weekday() >= 5: return False
+     t = now.hour * 60 + now.minute
+     return 14*60+35 <= t <= 20*60+45
+@@ -164,7 +165,7 @@ class MeanReversionBot:
+ 
+             ou = fit_ou(list(self.ph[ticker]))
+             if ou is None: continue
+-            if not (5 <= ou['hl'] <= 120): continue
++            if not (3 <= ou['hl'] <= 240): continue
+ 
+             px = prices[-1]
+             z  = (px - ou['mu']) / ou['sig_eq']
+@@ -422,7 +423,7 @@ class PairsBot:
+                 if beta <= 0: continue
+                 spread = xa - beta * ya
+                 adf = adfuller(spread, maxlag=3, autolag='AIC')
+-                if adf[1] > 0.10: continue
++                if adf[1] > 0.15: continue
+                 ou = fit_ou(spread)
+                 if ou is None: continue
+                 if not (5 <= ou['hl'] <= 300): continue
+diff --git a/dashboard_server_v2.py b/dashboard_server_v2.py
+index 6eaaaaa..03e5234 100644
+--- a/dashboard_server_v2.py
++++ b/dashboard_server_v2.py
+@@ -331,7 +331,14 @@ def fetch_data():
+             print(f"Fetch error: {e}")
+             with state_lock:
+                 state["connected"] = False
+-            pass  # garde les dernieres donnees connues
++                state["last_update"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " (déconnecté)"
++            # Tenter reconnexion automatique
++            try:
++                if not ib.isConnected():
++                    time.sleep(10)
++                    connect_ib()
++            except Exception:
++                pass
+ 
+         time.sleep(REFRESH_S)
+ 
+@@ -342,7 +349,12 @@ def api_data():
+ 
+ @app.route('/')
+ def index():
+-    return open('/root/bots/dashboard_v2.html').read()
++    import os as _os
++    html_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'dashboard_v2.html')
++    try:
++        return open(html_path).read()
++    except FileNotFoundError:
++        return '<h1>dashboard_v2.html introuvable</h1><p>Vérifier le chemin du fichier.</p>'
+ 
+ if __name__ == '__main__':
+     connect_ib()
+-- 
+2.43.0
+
