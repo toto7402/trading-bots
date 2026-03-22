@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 HOST      = '127.0.0.1'
 PORT         = 4002
-CLIENT_ID    = 1
+CLIENT_ID    = 100
 CAPITAL      = 1_090_000
 MAX_POS_PCT  = 0.05
 N_TOP        = 10
