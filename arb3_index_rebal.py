@@ -120,6 +120,10 @@ def fetch_index_changes():
     except Exception as e:
         log.error(f"News fetch error : {e}")
 
+    static_candidates = ['INTC','WBA','PARA','SWK','MRO']
+    for t in static_candidates:
+        if t not in candidates:
+            candidates.append(t)
     return candidates
 
 

@@ -164,7 +164,7 @@ class MeanReversionBot:
 
             ou = fit_ou(list(self.ph[ticker]))
             if ou is None: continue
-            if not (5 <= ou['hl'] <= 120): continue
+            if not (3 <= ou['hl'] <= 240): continue
 
             px = prices[-1]
             z  = (px - ou['mu']) / ou['sig_eq']
@@ -422,7 +422,7 @@ class PairsBot:
                 if beta <= 0: continue
                 spread = xa - beta * ya
                 adf = adfuller(spread, maxlag=3, autolag='AIC')
-                if adf[1] > 0.10: continue
+                if adf[1] > 0.15: continue
                 ou = fit_ou(spread)
                 if ou is None: continue
                 if not (5 <= ou['hl'] <= 300): continue

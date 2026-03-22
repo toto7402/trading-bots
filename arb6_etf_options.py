@@ -351,7 +351,25 @@ def get_etf_momentum(ib: IB, ticker: str) -> str:
     if not spot: return 'neutral'
     # Heuristique simple : comparer bid/ask spread comme proxy de tendance
     # En pratique, on utiliserait des données historiques
-    return 'bullish'  # Simplifié — à enrichir avec vraies données
+    try:
+        from ib_insync import Stock
+        contract = Stock(ticker, 'SMART', 'USD')
+        ib.qualifyContracts(contract)
+        bars = ib.reqHistoricalData(contract, '', '60 D', '1 day', 'CLOSE', useRTH=True, formatDate=1, keepUpToDate=False)
+        if not bars or len(bars) < 20:
+            return 'neutral'
+        closes = [b.close for b in bars]
+        ma20 = sum(closes[-20:]) / 20
+        ma50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else ma20
+        spot = closes[-1]
+        if spot > ma20 and ma20 > ma50:
+            return 'bullish'
+        elif spot < ma20 and ma20 < ma50:
+            return 'bearish'
+        return 'neutral'
+    except Exception as e:
+        log.warning(f'Momentum {ticker}: {e}')
+        return 'neutral' 
 
 def run_directional_etf(ib: IB, peak_nav: list):
     """
