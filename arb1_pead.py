@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 HOST      = '127.0.0.1'
 PORT         = 4002
 CLIENT_ID = 2
-CAPITAL   = 50_000
+CAPITAL   = 1_090_000
 POS_SIZE  = 0.04
 HOLD_DAYS = 60
 MIN_SURPRISE = 0.05
@@ -220,8 +220,8 @@ def main():
     ib = connect()
     run(ib)
 
-    schedule.every().day.at("10:00").do(lambda: run(ib))
-    schedule.every().day.at("15:45").do(lambda: run(ib))
+    schedule.every().day.at("15:00").do(lambda: run(ib))
+    schedule.every().day.at("20:30").do(lambda: run(ib))
 
     log.info("PEAD actif — scan a 10h00 et 15h45 chaque jour")
     try:

@@ -481,15 +481,15 @@ def main():
                now.replace(hour=9,minute=30) <= now <= now.replace(hour=15,minute=55)
 
     # Lundi + Mercredi 9h50 : Momentum trend following
-    schedule.every().monday.at("09:50").do(
+    schedule.every().monday.at("14:50").do(
         lambda: run_futures_momentum(ib, peak_nav) if market_open() else None)
-    schedule.every().wednesday.at("09:50").do(
+    schedule.every().wednesday.at("14:50").do(
         lambda: run_futures_momentum(ib, peak_nav) if market_open() else None)
 
     # Mardi + Jeudi 10h05 : Pair trading Or/ZN
-    schedule.every().tuesday.at("10:05").do(
+    schedule.every().tuesday.at("15:05").do(
         lambda: run_gold_bonds_pair(ib, peak_nav) if market_open() else None)
-    schedule.every().thursday.at("10:05").do(
+    schedule.every().thursday.at("15:05").do(
         lambda: run_gold_bonds_pair(ib, peak_nav) if market_open() else None)
 
     # Toutes les 15 min entre 10h et 15h : ES mean reversion
@@ -497,7 +497,7 @@ def main():
         lambda: run_es_mean_reversion(ib, peak_nav) if market_open() else None)
 
     # 15h45 : Fermeture EOD ES
-    schedule.every().day.at("15:45").do(
+    schedule.every().day.at("20:45").do(
         lambda: close_es_eod(ib) if datetime.now().weekday() < 5 else None)
 
     # Toutes les heures : vérification stop loss + levier

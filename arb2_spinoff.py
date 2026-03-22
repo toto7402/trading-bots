@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 HOST      = '127.0.0.1'
 PORT         = 4002
 CLIENT_ID = 3
-CAPITAL   = 50_000
+CAPITAL   = 1_090_000
 POS_SIZE  = 0.05
 HOLD_DAYS_MIN = 5
 HOLD_DAYS_MAX = 90
@@ -247,8 +247,8 @@ def main():
     ib = connect()
     run(ib)
 
-    schedule.every().monday.at("09:45").do(lambda: run(ib))
-    schedule.every().thursday.at("09:45").do(lambda: run(ib))
+    schedule.every().monday.at("14:45").do(lambda: run(ib))
+    schedule.every().thursday.at("14:45").do(lambda: run(ib))
 
     log.info("Spinoff actif — scan lundi et jeudi a 09h45")
     try:

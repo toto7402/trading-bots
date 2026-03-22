@@ -562,15 +562,15 @@ def main():
     )
 
     # Lundi + Jeudi 10h30 : Cash-Secured Puts
-    schedule.every().monday.at("10:30").do(
+    schedule.every().monday.at("15:30").do(
         lambda: run_cash_secured_puts(ib) if is_market_open() else None
     )
-    schedule.every().thursday.at("10:30").do(
+    schedule.every().thursday.at("15:30").do(
         lambda: run_cash_secured_puts(ib) if is_market_open() else None
     )
 
     # Tous les jours 9h45 : Straddle pre-earnings
-    schedule.every().day.at("09:45").do(
+    schedule.every().day.at("14:45").do(
         lambda: run_straddle_earnings(ib) if is_market_open() else None
     )
 

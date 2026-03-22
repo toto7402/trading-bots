@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 HOST      = '127.0.0.1'
 PORT         = 4002
 CLIENT_ID = 5
-CAPITAL   = 50_000
+CAPITAL   = 1_090_000
 POS_SIZE  = 0.06        # 6% par position (plus concentré, moins de liquidité)
 MAX_POSITIONS = 5
 MIN_MISPRICING = 0.03   # 3% de décote minimum pour entrer
@@ -423,8 +423,8 @@ def main():
     ib = connect()
     run(ib)
 
-    schedule.every().day.at("10:30").do(lambda: run(ib))
-    schedule.every().day.at("14:00").do(lambda: run(ib))
+    schedule.every().day.at("15:30").do(lambda: run(ib))
+    schedule.every().day.at("19:00").do(lambda: run(ib))
 
     log.info("Convertibles actif — scan a 10h30 et 14h00")
     try:

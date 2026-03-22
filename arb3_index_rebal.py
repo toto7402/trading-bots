@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 HOST      = '127.0.0.1'
 PORT         = 4002
 CLIENT_ID = 4
-CAPITAL   = 50_000
+CAPITAL   = 1_090_000
 POS_SIZE  = 0.04
 MAX_POSITIONS = 8
 
@@ -270,7 +270,7 @@ def main():
     ib = connect()
     run(ib)
 
-    schedule.every().day.at("09:40").do(lambda: run(ib))
+    schedule.every().day.at("14:40").do(lambda: run(ib))
 
     log.info("Index Rebal actif — scan quotidien a 09h40")
     try:
