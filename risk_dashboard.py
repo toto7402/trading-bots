@@ -43,7 +43,7 @@ log = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────────
 HOST      = '127.0.0.1'
-PORT       = 7497
+PORT         = 4002
 CLIENT_ID  = 20         # clientId dédié au risk dashboard (dashboard_server utilise 9)
 CAPITAL    = 1_090_000
 REFRESH_S  = 60         # rafraîchissement en secondes

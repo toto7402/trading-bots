@@ -39,10 +39,13 @@ from alerts import alert_manager
 
 # ── Config ────────────────────────────────────────────────────────────────────
 HOST        = '127.0.0.1'
-PORT        = 7497
+PORT         = 4002
 CLIENT_ID   = 6
 CAPITAL     = 1_090_000
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
+if not FINNHUB_KEY:
+    print("WARNING: Variable d'environnement FINNHUB_KEY manquante. "
+          "Les stratégies dépendant de Finnhub seront désactivées.")
 if not FINNHUB_KEY:
     print("WARNING: Variable d'environnement FINNHUB_KEY manquante. "
           "Les stratégies dépendant de Finnhub seront désactivées.")

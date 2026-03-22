@@ -18,7 +18,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 HOST      = '127.0.0.1'
-PORT         = 7497
+PORT         = 4002
 CLIENT_ID    = 1
 CAPITAL      = 1_090_000
 MAX_POS_PCT  = 0.05

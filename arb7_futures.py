@@ -41,7 +41,7 @@ from alerts import alert_manager
 
 # ── Config ────────────────────────────────────────────────────────────────────
 HOST       = '127.0.0.1'
-PORT       = 7497
+PORT         = 4002
 CLIENT_ID  = 8
 CAPITAL    = 1_090_000
 MAX_LEVER  = 2.0

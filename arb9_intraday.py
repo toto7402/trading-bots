@@ -42,7 +42,7 @@ except Exception:
     alert_manager = _A()
 
 HOST    = '127.0.0.1'
-PORT    = 7497
+PORT         = 4002
 CAPITAL = 50_000
 SLIP    = 0.0005   # 5 bps
 

@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.INFO, handlers=[_file_handler, _stream_handler
 log = logging.getLogger(__name__)
 
 HOST      = '127.0.0.1'
-PORT      = 7497
+PORT         = 4002
 CLIENT_ID = 5
 CAPITAL   = 50_000
 POS_SIZE  = 0.06        # 6% par position (plus concentré, moins de liquidité)

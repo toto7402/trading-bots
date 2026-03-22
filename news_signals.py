@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 from alerts import alert_manager
 
 HOST        = '127.0.0.1'
-PORT        = 7497
+PORT         = 4002
 CLIENT_ID   = 10
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
 REFRESH_S   = 300
