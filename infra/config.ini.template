@@ -9,6 +9,7 @@ FIX=no
 IbDir=/root/Jts
 AcceptIncomingConnectionAction=accept
 ForceTwsApiPort=4002
+LoginDialogDisplayTimeout=180
 
 # Divers
 ShowAllTrades=no
