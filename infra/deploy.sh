@@ -4,16 +4,18 @@
 
 INFRA="$(cd "$(dirname "$0")" && pwd)"
 
-echo "[deploy] Installation xvfb + libs X11 + fonts..."
+echo "[deploy] Installation xvfb + libs X11 + fonts + openjfx..."
 apt-get install -y --no-install-recommends \
     xvfb x11-utils \
     libx11-6 libxext6 libxi6 libxrender1 libxtst6 \
     openjdk-17-jre \
+    openjfx \
     fontconfig \
     fonts-dejavu-core \
-    fonts-liberation 2>&1 | grep -E "^(Get:|Setting up|font|Unpacking|already)" || true
+    fonts-liberation 2>&1 | grep -E "^(Get:|Setting up|font|openjfx|Unpacking)" || true
 fc-cache -f 2>/dev/null || true
-echo "[deploy] Fonts disponibles: $(fc-list 2>/dev/null | wc -l)"
+echo "[deploy] Fonts: $(fc-list 2>/dev/null | wc -l)"
+echo "[deploy] JavaFX: $(ls /usr/share/openjfx/lib/javafx*.jar 2>/dev/null | wc -l) jars dans /usr/share/openjfx/lib/"
 
 echo "[deploy] Verification xvfb-run..."
 command -v xvfb-run || { echo "ERREUR: xvfb-run introuvable"; exit 1; }
