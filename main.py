@@ -12,7 +12,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s [%(name)s] %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/root/bots/trading_main.log'),
+        logging.FileHandler('/root/trading-bots/trading_main.log'),
     ]
 )
 log = logging.getLogger(__name__)

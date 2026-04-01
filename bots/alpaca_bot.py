@@ -7,7 +7,10 @@ import json
 import logging
 import os
 from typing import Optional
-import aioredis  # or redis.asyncio
+try:
+    import redis.asyncio as aioredis
+except ImportError:
+    import aioredis
 
 log = logging.getLogger(__name__)
 

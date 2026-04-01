@@ -1,7 +1,7 @@
 # Core
 asyncio-throttle>=1.0.2
-aioredis>=2.0.0
 redis>=4.6.0
+# Note: use redis.asyncio instead of aioredis (incompatible with Python 3.12+)
 
 # IB Gateway
 ib_insync>=0.9.86
@@ -17,8 +17,11 @@ databento>=0.41.0
 fredapi>=0.5.1
 
 # AI/LLM
-google-generativeai>=0.7.0
-pyautogen>=0.2.0
+google-genai>=1.0.0
+# google-generativeai is deprecated; use google-genai
+autogen-agentchat>=0.4.0
+autogen-ext>=0.4.0
+tiktoken>=0.5.0
 openai>=1.30.0
 mistralai>=0.4.0
 

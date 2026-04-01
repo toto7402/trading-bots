@@ -11,9 +11,9 @@ class DatabentoCfg:
 
 class Settings:
     def __init__(self):
-        # IB Gateway connection
+        # IB Gateway connection (default port 4002 = IB Gateway, 4001 = TWS)
         self.ib_host: str = os.getenv('IB_HOST', '127.0.0.1')
-        self.ib_port: int = int(os.getenv('IB_PORT', '4001'))
+        self.ib_port: int = int(os.getenv('IB_PORT', '4002'))
         self.ib_client_id: int = int(os.getenv('IB_CLIENT_ID', '1'))
 
         # Alpaca
@@ -25,10 +25,12 @@ class Settings:
         self.google_api_key: str = os.getenv('GOOGLE_API_KEY', '')
         self.mistral_api_key: str = os.getenv('MISTRAL_API_KEY', '')
         self.openai_api_key: str = os.getenv('OPENAI_API_KEY', '')
+        self.anthropic_api_key: str = os.getenv('ANTHROPIC_API_KEY', '')
 
         # Data providers
         self.fred_api_key: str = os.getenv('FRED_API_KEY', '')
         self.databento: DatabentoCfg = DatabentoCfg()
+        self.finnhub_key: str = os.getenv('FINNHUB_KEY', '')
 
         # Infrastructure
         self.redis_url: str = os.getenv('REDIS_URL', 'redis://localhost:6379')
