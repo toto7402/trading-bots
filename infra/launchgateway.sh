@@ -6,7 +6,7 @@ set -euo pipefail
 GATEWAY_DIR=/opt/ibgateway           # repertoire installation IB Gateway (sans slash)
 IBC_DIR=/opt/ibc                     # repertoire IBC
 IB_SETTINGS_DIR=/root/Jts            # repertoire settings IB (= IbDir dans config.ini)
-TWS_PORT=4001                         # port paper trading IB Gateway
+TWS_PORT=4002                         # port paper trading IB Gateway
 LOG_FILE=/root/bots/ibc.log
 export DISPLAY="${DISPLAY:-:99}"
 

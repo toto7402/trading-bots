@@ -2,24 +2,13 @@
 # Doc: https://github.com/IbcAlpha/IBC/blob/master/userguide.md
 
 [IBController]
-
-# Credentials
 IbLoginId=YOUR_IB_USERNAME
 IbPassword=YOUR_IB_PASSWORD
-
-# Mode paper trading
 TradingMode=paper
-
-# Repertoire settings IB Gateway (logs, config utilisateur -- PAS le repertoire d'installation)
-# Correspond au 3eme argument passe a IbcTws (IB_SETTINGS_DIR dans launchgateway.sh)
+FIX=no
 IbDir=/root/Jts
-
-# Connexions API entrantes
 AcceptIncomingConnectionAction=accept
-
-# Pas de confirmation 2FA interactive (VPS headless)
-# Note: si 2FA actif sur le compte, utiliser IBKR Mobile comme methode 2FA
-# et confirmer depuis l'app lors du premier login
+ForceTwsApiPort=4002
 
 # Divers
 ShowAllTrades=no
@@ -27,10 +16,6 @@ ReadOnlyLogin=no
 AcceptNonBrokerageAccountWarning=yes
 AutoLogoffTime=
 ClosedownAt=
-
-# Paper trading: pas de message d'avertissement
 DismissPasswordExpiryWarning=yes
 DismissNSEComplianceTask=yes
-
-# Reconnexion automatique
 ReconnectRetryDelay=5
