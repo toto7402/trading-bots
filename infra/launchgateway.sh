@@ -44,8 +44,12 @@ exec xvfb-run \
     --auto-servernum \
     --server-args="-screen 0 1280x1024x24 -ac" \
     "${JAVA}" \
+    --add-opens java.desktop/javax.swing=ALL-UNNAMED \
+    --add-opens java.desktop/javax.swing.plaf.basic=ALL-UNNAMED \
     --add-opens java.desktop/sun.awt=ALL-UNNAMED \
     --add-opens java.desktop/sun.awt.X11=ALL-UNNAMED \
+    --add-opens java.base/java.lang.reflect=ALL-UNNAMED \
+    --add-opens java.base/java.lang=ALL-UNNAMED \
     -Djava.awt.headless=false \
     -cp "${CP}" \
     ibcalpha.ibc.IbcTws \
