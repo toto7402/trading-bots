@@ -6,7 +6,10 @@ GATEWAY_DIR=/opt/ibgateway
 IBC_DIR=/opt/ibc
 IB_SETTINGS_DIR=/root/Jts
 TWS_PORT=4002
-JAVA=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+JAVA="${JAVA_HOME}/bin/java"
+# libjvm.so est dans lib/server/ -- requis par libawt_xawt.so au chargement
+export LD_LIBRARY_PATH="${JAVA_HOME}/lib/server:${JAVA_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 LOG=/opt/ibc/gateway_stdout.log
 ELOG=/opt/ibc/gateway_stderr.log
 
