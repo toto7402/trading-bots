@@ -68,13 +68,20 @@ def connect() -> IB:
     while datetime.now().weekday() >= 5:
         log.info("Weekend — attente lundi...")
         time.sleep(3600)
-    try:
-        ib.connect(HOST, PORT, clientId=CLIENT_ID)
-        log.info(f"Connecté — {ib.wrapper.accounts}")
-        return ib
-    except Exception as e:
-        alert_manager.notify_crash('futures_bot', str(e))
-        raise
+    retry_delay = 5
+    max_delay = 300
+    while True:
+        try:
+            ib.connect(HOST, PORT, clientId=CLIENT_ID)
+            log.info(f"Connecté — {ib.wrapper.accounts}")
+            return ib
+        except Exception as e:
+            alert_manager.notify_crash('futures_bot', str(e))
+            log.error(f'IB connection failed: {e}. Retrying in {retry_delay}s')
+            import time as _time
+            _time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, max_delay)
+            ib = IB()  # fresh instance
 
 def get_nav(ib: IB) -> float:
     for v in ib.accountValues():

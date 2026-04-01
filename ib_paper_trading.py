@@ -53,9 +53,18 @@ def kelly_fraction(win_rate: float = 0.655, avg_win: float = 0.08,
 
 def connect() -> IB:
     ib = IB()
-    ib.connect(HOST, PORT, clientId=CLIENT_ID)
-    log.info(f"Connecte a IB Paper Trading — compte : {ib.wrapper.accounts}")
-    return ib
+    retry_delay = 5
+    max_delay = 300
+    while True:
+        try:
+            ib.connect(HOST, PORT, clientId=CLIENT_ID)
+            log.info(f"Connecte a IB Paper Trading — compte : {ib.wrapper.accounts}")
+            return ib
+        except Exception as e:
+            log.error(f"API connection failed: {e}. Retrying in {retry_delay}s")
+            import time as _time
+            _time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, max_delay)
 
 
 def get_account_value(ib: IB) -> float:
@@ -344,9 +353,14 @@ def main():
         timedelta(days=32)
     ).replace(day=1) - timedelta(days=1)
 
-    rebalance(ib, peak_capital[0])
+    existing_positions = get_positions(ib)
+    if not existing_positions:
+        log.info("Aucune position — rebalancement initial")
+        rebalance(ib, peak_capital[0])
+    else:
+        log.info(f"Positions existantes ({len(existing_positions)}) — skip")
 
-    schedule.every().day.at("09:35").do(
+    schedule.every().day.at("14:35").do(
         lambda: run_monthly_job(ib, peak_capital)
         if datetime.now().date() == last_biz_day_of_month().date()
         else None
