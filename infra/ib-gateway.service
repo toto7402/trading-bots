@@ -8,6 +8,7 @@ StartLimitBurst=5
 [Service]
 Type=simple
 Environment="DISPLAY=:99"
+Environment="LD_LIBRARY_PATH=/usr/lib/jvm/java-17-openjdk-amd64/lib/server:/usr/lib/jvm/java-17-openjdk-amd64/lib"
 ExecStart=/opt/ibc/launchgateway.sh
 Restart=on-failure
 RestartSec=30

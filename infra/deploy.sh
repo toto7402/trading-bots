@@ -13,6 +13,15 @@ apt-get install -y --no-install-recommends \
 echo "[deploy] Verification xvfb-run..."
 command -v xvfb-run || { echo "ERREUR: xvfb-run introuvable"; exit 1; }
 
+# libjvm.so est dans lib/server/ -- dlopen() ne le trouve pas sans ldconfig
+# L'enregistrer dans le cache systeme resout UnsatisfiedLinkError: libawt_xawt.so
+echo "[deploy] Enregistrement libjvm.so dans ldconfig..."
+echo "/usr/lib/jvm/java-17-openjdk-amd64/lib/server" > /etc/ld.so.conf.d/java17-server.conf
+echo "/usr/lib/jvm/java-17-openjdk-amd64/lib"        > /etc/ld.so.conf.d/java17-lib.conf
+ldconfig
+echo "[deploy] ldconfig OK -- verification libjvm.so:"
+ldconfig -p | grep libjvm || echo "ATTENTION: libjvm.so absent du cache"
+
 echo "[deploy] Copie launchgateway.sh -> /opt/ibc/"
 cp "${INFRA}/launchgateway.sh" /opt/ibc/launchgateway.sh
 chmod +x /opt/ibc/launchgateway.sh
@@ -27,6 +36,9 @@ echo "[deploy] (Re)start ib-gateway"
 systemctl stop ib-gateway 2>/dev/null || true
 pkill Xvfb 2>/dev/null || true
 sleep 2
+# Vider les logs pour avoir une sortie propre
+> /opt/ibc/gateway_stdout.log
+> /opt/ibc/gateway_stderr.log
 systemctl start ib-gateway || true
 
 echo "[deploy] Attente 30s..."
