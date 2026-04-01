@@ -1,17 +1,17 @@
 #!/bin/bash
-# deploy.sh -- Applique la derniere version de launchgateway + service sur le VPS
-set -e
+# deploy.sh -- Applique launchgateway + service sur le VPS
+# set -e retire pour continuer et afficher les logs meme si le service crash
 
 INFRA="$(cd "$(dirname "$0")" && pwd)"
 
-# --- Dependances : Java complet (pas headless) + libs X11 AWT ---
-# openjdk-17-jre-headless n'inclut pas libawt_xawt.so (AWT natif)
-# IB Gateway a besoin du JRE complet pour java.awt.Toolkit
-echo "[deploy] Installation dependances Java + X11..."
+echo "[deploy] Installation xvfb + libs X11..."
 apt-get install -y --no-install-recommends \
-    openjdk-17-jre \
+    xvfb x11-utils \
     libx11-6 libxext6 libxi6 libxrender1 libxtst6 \
-    xvfb x11-utils 2>&1 | tail -5
+    openjdk-17-jre 2>&1 | grep -E "^(Get:|Setting up|openjdk|xvfb|Unpacking|already)" || true
+
+echo "[deploy] Verification xvfb-run..."
+command -v xvfb-run || { echo "ERREUR: xvfb-run introuvable"; exit 1; }
 
 echo "[deploy] Copie launchgateway.sh -> /opt/ibc/"
 cp "${INFRA}/launchgateway.sh" /opt/ibc/launchgateway.sh
@@ -26,18 +26,24 @@ systemctl daemon-reload
 echo "[deploy] (Re)start ib-gateway"
 systemctl stop ib-gateway 2>/dev/null || true
 pkill Xvfb 2>/dev/null || true
-rm -f /tmp/.X99-lock 2>/dev/null || true
 sleep 2
-systemctl start ib-gateway
+systemctl start ib-gateway || true
 
-echo "[deploy] Attente 30s (demarrage IBC + login)..."
+echo "[deploy] Attente 30s..."
 sleep 30
 
+echo ""
 echo "=== systemctl status ==="
 systemctl status ib-gateway --no-pager || true
 
-echo "=== gateway_stdout.log (50 dernieres lignes) ==="
-tail -50 /opt/ibc/gateway_stdout.log 2>/dev/null || echo "(vide)"
+echo ""
+echo "=== gateway_stdout.log ==="
+cat /opt/ibc/gateway_stdout.log 2>/dev/null || echo "(vide)"
 
-echo "=== gateway_stderr.log (20 dernieres lignes) ==="
-tail -20 /opt/ibc/gateway_stderr.log 2>/dev/null || echo "(vide)"
+echo ""
+echo "=== gateway_stderr.log ==="
+cat /opt/ibc/gateway_stderr.log 2>/dev/null || echo "(vide)"
+
+echo ""
+echo "=== ldd libawt_xawt (deps manquantes) ==="
+ldd /usr/lib/jvm/java-17-openjdk-amd64/lib/libawt_xawt.so 2>/dev/null | grep "not found" || echo "toutes les deps OK"
