@@ -78,35 +78,36 @@ echo "config.ini genere dans ${IBC_DIR}/config.ini"
 cp "${INFRA_DIR}/launchgateway.sh" "${IBC_DIR}/launchgateway.sh"
 chmod +x "${IBC_DIR}/launchgateway.sh"
 
-# 6. Service systemd
+# 6. Service systemd (nom : ib-gateway pour cohérence avec le VPS)
 mkdir -p "${LOG_DIR}"
-cat > /etc/systemd/system/ibgateway.service << 'EOF'
+cat > /etc/systemd/system/ib-gateway.service << 'EOF'
 [Unit]
-Description=IB Gateway via IBC (headless)
+Description=IB Gateway via IBC 3.19 (headless)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 Environment="DISPLAY=:99"
-ExecStartPre=/bin/sh -c 'Xvfb :99 -screen 0 1280x1024x24 -ac &'
-ExecStartPre=/bin/sleep 2
+ExecStartPre=/bin/bash -c 'pkill Xvfb || true; rm -f /tmp/.X99-lock; Xvfb :99 -screen 0 1280x1024x24 -ac &'
+ExecStartPre=/bin/sleep 3
 ExecStart=/opt/ibc/launchgateway.sh
 Restart=on-failure
 RestartSec=30
-StandardOutput=append:/root/bots/ibgateway.log
-StandardError=append:/root/bots/ibgateway.log
+StandardOutput=append:/opt/ibc/gateway_stdout.log
+StandardError=append:/opt/ibc/gateway_stdout.log
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable ibgateway.service
-echo "Service ibgateway.service installe et active"
+systemctl enable ib-gateway.service
+echo "Service ib-gateway.service installe et active"
 
 echo ""
 echo "=== Setup termine ==="
-echo "Pour demarrer: systemctl start ibgateway"
-echo "Pour les logs:  journalctl -u ibgateway -f"
+echo "Pour demarrer: systemctl start ib-gateway"
+echo "Pour les logs:  journalctl -u ib-gateway -f"
+echo "              tail -f /opt/ibc/gateway_stdout.log"
 echo "              tail -f /root/bots/ibc.log"

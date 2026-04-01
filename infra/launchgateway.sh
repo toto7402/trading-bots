@@ -3,10 +3,11 @@
 
 set -euo pipefail
 
-GATEWAY_DIR=/opt/ibgateway           # repertoire installation IB Gateway (sans slash)
-IBC_DIR=/opt/ibc                     # repertoire IBC
-IB_SETTINGS_DIR=/root/Jts            # repertoire settings IB (= IbDir dans config.ini)
-TWS_PORT=4002                         # port paper trading IB Gateway
+GATEWAY_DIR=/opt/ibgateway
+IBC_DIR=/opt/ibc
+IB_SETTINGS_DIR=/root/Jts
+TWS_PORT=4002
+JAVA=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
 LOG_FILE=/root/bots/ibc.log
 export DISPLAY="${DISPLAY:-:99}"
 
@@ -15,11 +16,19 @@ mkdir -p /root/bots "${IB_SETTINGS_DIR}"
 # --- Debug pre-lancement ---
 echo "=== IBC debug $(date '+%Y-%m-%d %H:%M:%S') ==="
 echo "GATEWAY_DIR=${GATEWAY_DIR}"
+echo "JAVA=${JAVA}"
 echo "IBC.jar exists: $(ls ${IBC_DIR}/IBC.jar 2>/dev/null && echo YES || echo NO)"
 echo "ibgateway binary: $(ls ${GATEWAY_DIR}/ibgateway 2>/dev/null && echo YES || echo NO)"
 echo "jars: $(ls ${GATEWAY_DIR}/jars/*.jar 2>/dev/null | wc -l) fichiers"
+echo "DISPLAY=${DISPLAY}"
 
 # --- Verifications ---
+if [ ! -f "${JAVA}" ]; then
+    echo "ERREUR: Java 17 introuvable a ${JAVA}" >&2
+    echo "Installe avec: apt-get install -y openjdk-17-jre-headless" >&2
+    exit 1
+fi
+
 if [ ! -f "${IBC_DIR}/IBC.jar" ]; then
     echo "ERREUR: ${IBC_DIR}/IBC.jar introuvable -- lance setup_ibc.sh d'abord" >&2
     exit 1
@@ -36,17 +45,18 @@ if [ ! -f "${GATEWAY_DIR}/ibgateway" ]; then
     exit 1
 fi
 
-# --- Lancement IBC 3.19 ---
-# Arguments positionnels obligatoires :
-#   1) config.ini
-#   2) GATEWAY_DIR  -- doit contenir l'executable ibgateway
-#   3) IB_SETTINGS_DIR -- dossier Jts (IbDir dans config.ini)
-#   4) "ibgateway"  -- chaine litterale (minuscule), distingue de TWS
-#   5) TWS_PORT
-# Classpath : uniquement IBC.jar (IBC charge lui-meme les jars gateway)
-exec java \
+echo "=== Lancement IBC ==="
+
+# --- Lancement IBC 3.19 avec Java 17 ---
+# --add-opens : requis par IB Gateway 10.x pour les classes AWT internes
+# -Djava.awt.headless=false : IB Gateway a besoin d'un display (Xvfb)
+# Classpath : IBC.jar + tous les JARs gateway (jts4launch, twslaunch, etc.)
+# Args positionnels IBC : config.ini  GatewayDir  SettingsDir  ibgateway  port
+exec "${JAVA}" \
+    --add-opens java.desktop/sun.awt=ALL-UNNAMED \
+    --add-opens java.desktop/sun.awt.X11=ALL-UNNAMED \
     -Djava.awt.headless=false \
-    -cp "${IBC_DIR}/IBC.jar" \
+    -cp "${IBC_DIR}/IBC.jar:${GATEWAY_DIR}/jars/*" \
     ibcalpha.ibc.IbcTws \
     "${IBC_DIR}/config.ini" \
     "${GATEWAY_DIR}" \
