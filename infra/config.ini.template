@@ -10,8 +10,9 @@ IbPassword=YOUR_IB_PASSWORD
 # Mode paper trading
 TradingMode=paper
 
-# Chemin installation IB Gateway (sans slash final -- critique pour IBC 3.19)
-IbDir=/opt/ibgateway
+# Repertoire settings IB Gateway (logs, config utilisateur -- PAS le repertoire d'installation)
+# Correspond au 3eme argument passe a IbcTws (IB_SETTINGS_DIR dans launchgateway.sh)
+IbDir=/root/Jts
 
 # Connexions API entrantes
 AcceptIncomingConnectionAction=accept

@@ -41,7 +41,21 @@ if [ ! -d /opt/ibgateway/jars ]; then
     echo "ERREUR: /opt/ibgateway/jars absent -- verifier l'installation IB Gateway" >&2
     exit 1
 fi
-echo "IB Gateway OK: /opt/ibgateway/jars/"
+
+if [ ! -f /opt/ibgateway/ibgateway ]; then
+    echo "ERREUR: /opt/ibgateway/ibgateway introuvable" >&2
+    echo "Contenu de /opt/ibgateway :" >&2
+    ls -la /opt/ibgateway >&2
+    exit 1
+fi
+chmod +x /opt/ibgateway/ibgateway
+echo "IB Gateway OK: /opt/ibgateway/ibgateway + jars/"
+echo "JARs disponibles:"
+ls /opt/ibgateway/jars/
+
+# Repertoire settings IB (IbDir=/root/Jts dans config.ini)
+mkdir -p /root/Jts
+echo "Repertoire settings IB: /root/Jts"
 
 # 4. Generation config.ini depuis template + variables d'environnement
 IB_USER="${IB_USERNAME:-toto74000}"
