@@ -34,9 +34,19 @@ def days_held(df, col='entry_date'):
 
 def connect():
     ib = IB()
-    ib.connect(HOST, PORT, clientId=CLIENT_ID)
-    log.info(f"Connecte — {ib.wrapper.accounts}")
-    return ib
+    retry_delay = 5
+    max_delay = 300
+    while True:
+        try:
+            ib.connect(HOST, PORT, clientId=CLIENT_ID)
+            log.info(f"Connecte — {ib.wrapper.accounts}")
+            retry_delay = 5  # reset on success
+            return ib
+        except Exception as e:
+            log.error(f"API connection failed: {e}. Retrying in {retry_delay}s")
+            import time as _time
+            _time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, max_delay)
 
 
 def get_nav(ib):
@@ -244,21 +254,34 @@ def main():
         print("Obtenir une cle gratuite sur finnhub.io et remplacer FINNHUB_KEY")
         return
 
-    ib = connect()
-    run(ib)
-
-    schedule.every().monday.at("09:45").do(lambda: run(ib))
-    schedule.every().thursday.at("09:45").do(lambda: run(ib))
-
-    log.info("Spinoff actif — scan lundi et jeudi a 09h45")
+    retry_delay = 5
+    max_delay = 300
+    while True:
+        try:
+            ib = connect()
+            run(ib)
+            schedule.every().monday.at("09:45").do(lambda: run(ib))
+            schedule.every().thursday.at("09:45").do(lambda: run(ib))
+            log.info("Spinoff actif — scan lundi et jeudi a 09h45")
+            retry_delay = 5  # reset on successful connect
+            while True:
+                schedule.run_pending()
+                if not ib.isConnected():
+                    log.warning("IB connection lost — reconnecting")
+                    break
+                ib.sleep(60)
+        except KeyboardInterrupt:
+            log.info("Arret")
+            break
+        except Exception as e:
+            log.error(f"Connection failed: {e}. Retrying in {retry_delay}s")
+            import time as _time
+            _time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, max_delay)
     try:
-        while True:
-            schedule.run_pending()
-            ib.sleep(60)
-    except KeyboardInterrupt:
-        log.info("Arret")
-    finally:
         ib.disconnect()
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
