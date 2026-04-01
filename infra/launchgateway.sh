@@ -25,38 +25,44 @@ echo "DISPLAY=${DISPLAY}"
 # --- Verifications ---
 if [ ! -f "${JAVA}" ]; then
     echo "ERREUR: Java 17 introuvable a ${JAVA}" >&2
-    echo "Installe avec: apt-get install -y openjdk-17-jre-headless" >&2
     exit 1
 fi
-
 if [ ! -f "${IBC_DIR}/IBC.jar" ]; then
-    echo "ERREUR: ${IBC_DIR}/IBC.jar introuvable -- lance setup_ibc.sh d'abord" >&2
+    echo "ERREUR: ${IBC_DIR}/IBC.jar introuvable" >&2
     exit 1
 fi
-
 if [ ! -f "${IBC_DIR}/config.ini" ]; then
     echo "ERREUR: ${IBC_DIR}/config.ini introuvable" >&2
     exit 1
 fi
-
 if [ ! -f "${GATEWAY_DIR}/ibgateway" ]; then
     echo "ERREUR: ${GATEWAY_DIR}/ibgateway introuvable" >&2
     ls -la "${GATEWAY_DIR}" >&2
     exit 1
 fi
 
+# --- Construction explicite du classpath ---
+# Le wildcard Java (jars/*) n'est pas résolu quand il est passé via exec bash.
+# On construit la chaine CP jar par jar pour que chaque .jar soit explicite.
+CP="${IBC_DIR}/IBC.jar"
+for jar in "${GATEWAY_DIR}/jars/"*.jar; do
+    CP="${CP}:${jar}"
+done
+echo "classpath: ${CP}"
+
 echo "=== Lancement IBC ==="
 
-# --- Lancement IBC 3.19 avec Java 17 ---
-# --add-opens : requis par IB Gateway 10.x pour les classes AWT internes
-# -Djava.awt.headless=false : IB Gateway a besoin d'un display (Xvfb)
-# Classpath : IBC.jar + tous les JARs gateway (jts4launch, twslaunch, etc.)
-# Args positionnels IBC : config.ini  GatewayDir  SettingsDir  ibgateway  port
+# Args positionnels IBC 3.19 :
+#   1) config.ini
+#   2) GATEWAY_DIR  (contient l'executable ibgateway)
+#   3) IB_SETTINGS_DIR  (dossier Jts, = IbDir dans config.ini)
+#   4) "ibgateway"  (litteral minuscule, distingue de tws)
+#   5) TWS_PORT
 exec "${JAVA}" \
     --add-opens java.desktop/sun.awt=ALL-UNNAMED \
     --add-opens java.desktop/sun.awt.X11=ALL-UNNAMED \
     -Djava.awt.headless=false \
-    -cp "${IBC_DIR}/IBC.jar:${GATEWAY_DIR}/jars/*" \
+    -cp "${CP}" \
     ibcalpha.ibc.IbcTws \
     "${IBC_DIR}/config.ini" \
     "${GATEWAY_DIR}" \
