@@ -20,3 +20,6 @@ ClosedownAt=
 DismissPasswordExpiryWarning=yes
 DismissNSEComplianceTask=yes
 ReconnectRetryDelay=5
+TwoFactorAuthenticationExitInterval=0
+ExistingSessionDetectedAction=primary
+OverrideTwsApiPort=4002
